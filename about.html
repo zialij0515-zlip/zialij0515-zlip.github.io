@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>关于我 · 赵梁君 Zia</title>
+<link rel="stylesheet" href="assets/site.css" />
+<style>
+  .wrap{max-width:1320px;margin:0 auto;padding:0 40px;}
+  .grid{display:grid;grid-template-columns:0.95fr 1.05fr;gap:80px;align-items:center;min-height:calc(100vh - 150px);padding:14px 0 50px;}
+
+  /* 左：标题 + 介绍。本轮文案变长，字号与间距略收，保证一屏仍放得下 */
+  .left .eyebrow{margin-bottom:18px;}
+  .left h1{
+    font-family:Georgia,"Songti SC","Times New Roman",serif;
+    font-size:clamp(36px,4.7vw,60px);font-weight:400;letter-spacing:-.045em;line-height:1.08;
+  }
+  .left h1 em{font-style:italic;color:var(--accent);}
+  .left .lead{margin-top:20px;font-size:13.5px;line-height:1.75;max-width:460px;}
+  .left .lead + .lead{margin-top:10px;}
+  .left .sig{
+    margin-top:20px;display:flex;align-items:center;justify-content:flex-end;gap:14px;
+    max-width:460px;
+    font-family:Georgia,"Songti SC",serif;font-size:15px;
+  }
+  .left .sig .line{width:44px;height:1px;background:var(--accent);}
+  .left .mini{margin-top:40px;display:flex;flex-wrap:wrap;gap:6px;}
+  .left .mini span{font-size:10px;padding:5px 10px;border:1px solid var(--line);border-radius:999px;color:var(--muted);}
+
+  /* 右：立体堆叠四宫格 */
+  .stack{perspective:1100px;}
+  .stack-inner{
+    border:1px solid var(--line);border-radius:22px;background:var(--card);
+    padding:14px;box-shadow:0 24px 60px rgba(90,66,32,.13);
+    transform-style:preserve-3d;
+  }
+  .cell{
+    position:relative;display:flex;gap:16px;align-items:flex-start;
+    padding:20px 20px;border-radius:15px;border:1px solid var(--line);
+    background:var(--bg);margin-bottom:10px;
+    transition:transform .35s cubic-bezier(.22,1,.36,1),box-shadow .35s ease,border-color .3s;
+    transform-style:preserve-3d;
+  }
+  .cell:last-child{margin-bottom:0;}
+  .cell:hover{
+    transform:translateZ(26px) translateX(-4px) rotateX(1.5deg);
+    box-shadow:-10px 18px 32px rgba(90,66,32,.18);border-color:var(--accent);
+  }
+  .cell .ic{
+    flex:none;width:38px;height:38px;border-radius:50%;border:1px solid var(--line);
+    display:grid;place-items:center;font-size:15px;background:var(--card);
+    transition:.3s;
+  }
+  .cell:hover .ic{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .cell .tx{flex:1;min-width:0;}
+  .cell h3{font-size:15px;font-weight:600;letter-spacing:-.02em;}
+  .cell p{font-size:12px;color:var(--muted);line-height:1.65;margin-top:6px;}
+  .cell .arw{
+    flex:none;align-self:center;font-size:18px;color:var(--muted);transition:transform .3s,color .3s;
+  }
+  .cell:hover .arw{transform:translateX(4px);color:var(--accent);}
+
+  /* 可点击的两张 */
+  a.cell{color:inherit;cursor:pointer;}
+
+  /* 第四张反白高亮（参考图的深色卡） */
+  .cell.dark{background:#2C2620;border-color:#2C2620;color:#F4ECDD;}
+  .cell.dark .ic{background:#3C342A;border-color:#4A4034;color:var(--accent);}
+  .cell.dark:hover .ic{background:var(--accent);color:#2C2620;}
+  .cell.dark p{color:rgba(244,236,221,.7);}
+  .cell.dark h3{color:#F4ECDD;}
+  .cell.dark .arw{color:rgba(244,236,221,.6);}
+  .contact-lines{margin-top:12px;display:flex;flex-direction:column;gap:9px;}
+  .contact-lines .row{display:flex;align-items:baseline;gap:10px;font-size:12px;flex-wrap:wrap;}
+  .contact-lines .k{width:52px;flex:none;color:rgba(244,236,221,.55);font-size:11px;letter-spacing:.08em;}
+  .contact-lines a,.contact-lines span.v{
+    color:#F4ECDD;font-size:12px;word-break:break-all;border-bottom:1px solid rgba(244,236,221,.25);
+    padding-bottom:1px;transition:.2s;
+  }
+  .contact-lines a:hover{border-color:var(--accent);color:var(--accent);}
+  .is-pending{color:var(--accent)!important;border-bottom:1px dashed var(--accent)!important;}
+
+  @media(max-width:900px){
+    .grid{grid-template-columns:1fr;gap:46px;padding-top:14px;min-height:0;}
+    .left h1{font-size:46px;}
+    .left .sig{justify-content:flex-start;max-width:none;}
+    .left .mini{margin-top:22px;}
+  }
+  @media(max-width:700px){
+    .wrap{padding:0 20px;}
+    .left h1{font-size:38px;}
+    .cell{padding:16px;gap:12px;}
+    .cell .ic{width:32px;height:32px;font-size:13px;}
+    .cell h3{font-size:14px;}
+  }
+</style>
+</head>
+<body data-page="about">
+
+<nav class="nav" id="nav"></nav>
+
+<div class="wrap">
+  <div class="grid">
+    <div class="left reveal">
+      <div class="eyebrow">About / 关于我</div>
+      <h1>用最小改动<br/><em>撬动可用产品</em>，<br/>用数据验证效果</h1>
+      <p class="lead">我是赵梁君，也可以叫我 Zia。2021 年从西南科技大学工程造价专业毕业，之后一直在产品和测试的交叉地带工作。</p>
+      <p class="lead">具备需求分析、PRD 撰写与 0-1 产品全周期经验；在公司将「AI 智能测试平台」落地为团队内部测试提效工具。从 5 年测试视角切入 AI 产品评测，能把 LLM 输出拉回可控范围，独立搭建小样本评测验证效果。</p>
+      <p class="lead">熟悉 RAG 工程、Dify 工作流编排、Agent 设计边界与评测集设计，能判断模型能力边界与数据 / Token 成本，按 MVP 分阶段验证。</p>
+      <p class="lead">做 AI 产品之后更确信一件事：真正难的不是让模型输出答案，而是定义清楚什么叫"答对了"、答不上来时该怎么办。所以我的每个作品都配了指标、测试用例和实测数据。</p>
+      <p class="lead">现在正在往 AI 产品经理转型，同时重建产品思维能力，为跨平台求职做准备。</p>
+      <div class="sig"><span class="line"></span>Zia / 赵梁君</div>
+      <div class="mini">
+        <span>需求分析</span><span>PRD 撰写</span><span>RAG工程</span><span>Agent</span><span>产品思维</span><span>指标设计</span><span>Dify工作流</span><span>Prompt 工程</span><span>Function Calling/MCP</span><span>Axure/Figma</span><span>BI 看板</span><span>Python/SQL</span><span>Git / GitHub</span><span>Postman/Jmeter</span>
+      </div>
+    </div>
+
+    <div class="stack reveal">
+      <div class="stack-inner">
+
+        <a class="cell" href="works.html">
+          <span class="ic">◧</span>
+          <span class="tx">
+            <h3>项目作品展示</h3>
+            <p>四个端到端作品，附 Demo 录屏、指标与原始文档。</p>
+          </span>
+          <span class="arw">↗</span>
+        </a>
+
+        <a class="cell" href="timeline.html">
+          <span class="ic">◷</span>
+          <span class="tx">
+            <h3>工作经历时间线</h3>
+            <p>2021 年毕业到现在的几段经历，以及可量化的锚点总结。</p>
+          </span>
+          <span class="arw">↗</span>
+        </a>
+
+        <div class="cell">
+          <span class="ic">✳</span>
+          <span class="tx">
+            <h3>关于我的情况</h3>
+            <p>习惯把大问题拆成可验证的小步，结果从真实数据指标中分析。一直对学习保持新鲜感，不断自我对比自我进步。</p>
+          </span>
+        </div>
+
+        <div class="cell dark">
+          <span class="ic">✉</span>
+          <span class="tx">
+            <h3>联系方式</h3>
+            <p>欢迎聊聊 AI 产品、测试效能、语义层治理，或者只是打个招呼。</p>
+            <div class="contact-lines">
+              <div class="row"><span class="k">电话</span><a data-contact="phone" href="#">…</a></div>
+              <div class="row"><span class="k">邮箱</span><a data-contact="email" href="#">…</a></div>
+              <div class="row"><span class="k">简历</span><a data-contact="resume" href="#" target="_blank" rel="noopener">…</a></div>
+              <div class="row"><span class="k">GitHub</span><a data-contact="github" href="#" target="_blank" rel="noopener">…</a></div>
+            </div>
+          </span>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="page-foot">
+  <span>© 2026 赵梁君 Zia · AI 产品经理作品集</span>
+  <a href="index.html">← 回到首页</a>
+</footer>
+
+<script src="assets/site.js"></script>
+<script>mountNav("about");</script>
+</body>
+</html>

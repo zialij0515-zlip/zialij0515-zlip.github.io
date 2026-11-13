@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>赵梁君 Zia · AI 产品经理作品集</title>
+<style>
+/* ============================================================
+   首页 V3 · Editorial
+   原型：E:/Mini Program/docs/portfolio-v3.svg  (680 × 400)
+   交互：monument.tv 三层 clip-path 一挤一拉 + 跟随鼠标的自定义光标
+   本页自包含（不引用 site.css / site.js），避免污染其他三页
+   ============================================================ */
+:root{
+  --paper:#F6EFE3;   /* 底 */
+  --amber:#D99A4E;   /* 左 */
+  --cream:#EFE0C6;   /* 中间窗口（纯色，不放图 / 视频） */
+  --cocoa:#4A382A;   /* 右 */
+  --rail:#3A2C20;    /* 左侧竖栏 */
+  --ink:#4A382A;
+  --quiet:#8A7563;
+  /* 四个斜切顶点：来自 SVG 的 320 / 560 / 140 / 400 */
+  --l-top:47.06%; --l-bot:20.59%; --r-top:82.35%; --r-bot:58.82%;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",Arial,sans-serif;
+  --serif:Georgia,"Times New Roman","Songti SC",serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{
+  background:var(--paper);color:var(--ink);
+  font-family:var(--sans);-webkit-font-smoothing:antialiased;
+  overflow:hidden;
+}
+a{text-decoration:none;color:inherit;}
+
+.hero{position:relative;width:100%;height:100vh;height:100svh;overflow:hidden;isolation:isolate;}
+
+/* ---------- 三层斜切色块 ----------
+   同一份标题在三层各渲染一遍，靠 clip-path 裁切 → 标题跨色块自动变色。
+   中间层只露纯色，没有图片 / 视频。 */
+.layer{position:absolute;inset:0;pointer-events:none;}
+.layer--left{
+  background:var(--amber);color:#3A2C20;
+  clip-path:polygon(0 0,var(--l-top) 0,var(--l-bot) 100%,0 100%);
+}
+.layer--mid{
+  background:var(--cream);color:#F6EFE3;
+  clip-path:polygon(var(--l-top) 0,var(--r-top) 0,var(--r-bot) 100%,var(--l-bot) 100%);
+}
+.layer--right{
+  background:var(--cocoa);color:#F6EFE3;
+  clip-path:polygon(var(--r-top) 0,100% 0,100% 100%,var(--r-bot) 100%);
+}
+
+/* 标题：三层完全同构，lines 的位置 / 字体必须一模一样才能对齐。
+   两行用正常文档流排，间距跟着字号走，窄屏不会被百分比拉散 */
+.headline{position:absolute;inset:0;color:inherit;}
+.headline .lines{position:absolute;left:11.76%;top:11.5%;}
+.headline .l1,.headline .l2{
+  white-space:nowrap;line-height:1;font-weight:900;letter-spacing:-.045em;
+}
+.headline .l1{font-size:clamp(28px,min(7.94vw,13.5vh),124px);}
+.headline .l2{margin-top:.2em;font-size:clamp(26px,min(7.35vw,12.5vh),114px);}
+
+/* 可选：切到 data-title-mode="flat" 就 100% 静态复刻 SVG 的 tspan 手工分色，
+   代价是中间窗口形变时不会带标题变色（默认 layered 不用这个） */
+.headline--flat{display:none;color:var(--ink);}
+body[data-title-mode="flat"] .layer .headline{display:none;}
+body[data-title-mode="flat"] .headline--flat{display:block;}
+
+/* ---------- 顶层固定装饰（不参与形变） ---------- */
+.overlay{position:absolute;inset:0;z-index:10;pointer-events:none;}
+
+/* 左侧竖栏：SVG 的 50px 宽，等比缩放 */
+.rail{
+  position:absolute;left:0;top:0;bottom:0;
+  width:clamp(40px,min(7.35vw,12.5vh),112px);
+  background:var(--rail);color:var(--paper);
+}
+.rail .z{
+  position:absolute;top:5.2%;left:0;right:0;text-align:center;
+  font-weight:900;letter-spacing:.02em;
+  font-size:clamp(11px,min(2.2vw,3.75vh),22px);
+}
+.rail .bars{position:absolute;top:49%;left:30%;width:40%;}
+.rail .bars i{display:block;background:var(--paper);height:clamp(2px,.75vh,4px);margin-bottom:clamp(3px,1.6vh,9px);}
+.rail .scroll{
+  position:absolute;left:50%;bottom:3%;white-space:nowrap;
+  writing-mode:vertical-rl;transform:translateX(-50%) rotate(180deg);
+  font-size:clamp(8px,min(1.6vw,2.75vh),16px);letter-spacing:.18em;
+}
+
+/* 左下副文案 */
+.desc{
+  position:absolute;left:11.76%;top:69%;
+  font-family:var(--serif);color:var(--ink);line-height:1.25;
+  font-size:clamp(13px,min(3.53vw,6vh),40px);
+}
+.desc .sub{
+  margin-top:2.4%;font-family:var(--sans);color:var(--quiet);
+  font-size:clamp(9px,min(1.76vw,3vh),18px);letter-spacing:.02em;
+}
+
+/* 右侧后掠翼片箭头：用 SVG 铺满全屏，坐标与原型完全一致。
+   第二个入口：整块箭头区域可点，hover 只有右移放大（按用户要求去掉椭圆发光） */
+.wing{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
+.wing-link{pointer-events:auto;cursor:pointer;}
+.hero.is-inside .wing-link{cursor:pointer;}
+.wing-hit{fill:transparent;pointer-events:all;}
+.wing-shape{
+  transform-box:fill-box;transform-origin:center;pointer-events:none;
+  transition:transform .5s cubic-bezier(.22,1,.36,1);
+}
+.wing-link:hover .wing-shape,
+.wing-link:focus-visible .wing-shape{transform:translateX(14px) scale(1.055);}
+.wing-link:focus-visible{outline:none;}
+/* 右上竖排小字 */
+.edge{
+  position:absolute;right:1.6%;top:3.5%;writing-mode:vertical-rl;
+  color:#1A120E;font-size:clamp(8px,min(1.6vw,2.75vh),16px);letter-spacing:.12em;
+}
+
+/* ---------- 跟随鼠标的光标（替代原型中央的 VIEW 圆） ---------- */
+.cursor{
+  position:fixed;left:0;top:0;z-index:30;
+  pointer-events:none;opacity:0;transition:opacity .22s ease;
+  transform:translate3d(-300px,-300px,0);
+}
+.hero.is-inside .cursor{opacity:1;}
+.cursor .disc{
+  width:clamp(58px,6vw,78px);height:clamp(58px,6vw,78px);border-radius:50%;
+  background:var(--cocoa);color:var(--paper);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  box-shadow:0 10px 30px rgba(40,28,18,.30);
+  transition:transform .25s cubic-bezier(.22,1,.36,1),background .25s ease;
+}
+.hero.is-inside .cursor .disc{transform:scale(1.04);}
+.cursor .arrow{font-size:clamp(17px,1.9vw,24px);line-height:1;font-weight:700;}
+.cursor .label{font-size:clamp(7px,.72vw,9px);letter-spacing:.24em;line-height:1.3;}
+.cursor:focus-visible{opacity:1;outline:2px solid var(--ink);outline-offset:6px;border-radius:50%;}
+.hero.is-inside,.hero.is-inside *{cursor:none;}
+
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+
+/* ---------- 触屏 / 窄屏降级：不跑鼠标交互，光标回到原型中央位置静态可点 ---------- */
+@media (hover:none),(max-width:760px){
+  .cursor{
+    position:absolute;left:40%;top:65%;opacity:1;pointer-events:auto;
+    transform:translate(-50%,-50%)!important;
+  }
+  .cursor:active .disc{transform:scale(.92);}
+  .hero,.hero.is-inside,.hero.is-inside *{cursor:auto;}
+  .headline .lines{top:14%;}
+  .desc{top:70%;}
+  .rail .scroll{display:none;}
+}
+/* 窄屏单独一套斜切顶点：500×900 下若沿用 1.7:1 的百分比，中间窗口会被拉成细竖条 */
+@media (max-width:760px){
+  .layer--left {clip-path:polygon(0 0,32% 0,0 100%,0 100%);}
+  .layer--mid  {clip-path:polygon(32% 0,74% 0,42% 100%,0 100%);}
+  .layer--right{clip-path:polygon(74% 0,100% 0,100% 100%,42% 100%);}
+  .headline .l1{font-size:clamp(30px,10.4vw,68px);}
+  .headline .l2{font-size:clamp(28px,9.6vw,62px);}
+  .desc{font-size:clamp(15px,4.5vw,26px);}
+  .desc .sub{font-size:clamp(9px,2.4vw,14px);}
+}
+@media (prefers-reduced-motion:reduce){
+  .cursor,.cursor .disc{transition:none;}
+}
+</style>
+</head>
+<body data-page="home" data-title-mode="layered">
+
+<main class="hero" id="hero">
+  <!-- 三层同构：只放标题，颜色由所在层决定 -->
+  <div class="layer layer--left">
+    <div class="headline" aria-hidden="true"><div class="lines"><div class="l1">READY FOR</div><div class="l2">PORTFOLIO?</div></div></div>
+  </div>
+  <div class="layer layer--mid">
+    <div class="headline" aria-hidden="true"><div class="lines"><div class="l1">READY FOR</div><div class="l2">PORTFOLIO?</div></div></div>
+  </div>
+  <div class="layer layer--right">
+    <div class="headline" aria-hidden="true"><div class="lines"><div class="l1">READY FOR</div><div class="l2">PORTFOLIO?</div></div></div>
+  </div>
+
+  <div class="overlay">
+    <!-- 左侧竖栏 -->
+    <div class="rail">
+      <div class="z">ZIA</div>
+      <div class="bars"><i></i><i></i></div>
+      <div class="scroll">SCROLL FOR MORE</div>
+    </div>
+
+    <!-- 平铺模式标题（默认隐藏，见 data-title-mode） -->
+    <div class="headline headline--flat" aria-hidden="true">
+      <div class="lines">
+        <div class="l1"><span style="color:#4A382A">READY</span><span style="color:#F6EFE3"> FOR</span></div>
+        <div class="l2"><span style="color:#F6EFE3">PORTFOLIO</span><span style="color:#1A120E">?</span></div>
+      </div>
+    </div>
+
+    <div class="desc">
+      <div>Test, products &amp;</div>
+      <div>Vibe Coding</div>
+      <div class="sub">Selected project, 2021 – 2026.</div>
+    </div>
+
+    <svg class="wing" viewBox="0 0 680 400" preserveAspectRatio="none">
+      <a class="wing-link" href="works.html" aria-label="进入项目作品页">
+        <rect class="wing-hit" x="538" y="148" width="136" height="134" />
+        <g class="wing-shape">
+          <polygon points="552,202 612,199 594,160 664,210 590,268 614,231 552,228"
+                   fill="#F6EFE3" transform="rotate(-5 608 214)" />
+        </g>
+      </a>
+    </svg>
+    <div class="edge">PORTFOLIO · 2026</div>
+  </div>
+
+  <h1 class="sr-only">READY FOR PORTFOLIO? 赵梁君 Zia 的作品集</h1>
+
+  <!-- 只在中间窗口内出现并跟随，点中间区域跳作品页 -->
+  <a class="cursor" id="cursor" href="works.html" aria-label="进入项目作品页">
+    <span class="disc"><span class="arrow">→</span><span class="label">VIEW</span></span>
+  </a>
+</main>
+
+<script>
+(function(){
+  const hero   = document.getElementById("hero");
+  const cursor = document.getElementById("cursor");
+  const BASE   = { lt:47.06, lb:20.59, rt:82.35, rb:58.82 }; // SVG 的四个切点（%）
+  const AMP    = 6.5;   // 每侧位移幅度（百分点），左右一挤一拉 → 窗口宽度变化约 ±13%
+  const mqStatic = matchMedia("(hover: none), (max-width: 760px)");
+  const mqReduce = matchMedia("(prefers-reduced-motion: reduce)");
+
+  /* 把当前形变值写进 CSS 变量，三层 clip-path 同时更新 */
+  function paint(px){
+    hero.style.setProperty("--l-top", (BASE.lt + px*AMP).toFixed(2) + "%");
+    hero.style.setProperty("--l-bot", (BASE.lb + px*AMP).toFixed(2) + "%");
+    hero.style.setProperty("--r-top", (BASE.rt - px*AMP).toFixed(2) + "%");
+    hero.style.setProperty("--r-bot", (BASE.rb - px*AMP).toFixed(2) + "%");
+  }
+  /* 某一高度上，中间梯形的左右边界（比例 0~1） */
+  function bounds(ny, px){
+    const lt = BASE.lt + px*AMP, lb = BASE.lb + px*AMP;
+    const rt = BASE.rt - px*AMP, rb = BASE.rb - px*AMP;
+    return { l:(lt + (lb-lt)*ny)/100, r:(rt + (rb-rt)*ny)/100 };
+  }
+  const norm = e => {
+    const r = hero.getBoundingClientRect();
+    return { nx:(e.clientX-r.left)/r.width, ny:(e.clientY-r.top)/r.height };
+  };
+  /* 触发范围用「基准边界」判定，不用形变后的边界，
+     否则窗口一动鼠标就会反复进出、光标闪烁 */
+  const inMid = (nx, ny) => {
+    const b = bounds(ny, 0);
+    return nx >= b.l && nx <= b.r;
+  };
+
+  let target = 0, cur = 0;
+  let mx = innerWidth/2, my = innerHeight/2, cx = mx, cy = my;
+
+  hero.addEventListener("pointermove", e => {
+    if(mqStatic.matches) return;
+    const { nx, ny } = norm(e);
+    mx = e.clientX; my = e.clientY;
+    const inside = inMid(nx, ny);
+    if(inside){
+      const b = bounds(ny, 0);
+      const t = (nx - (b.l+b.r)/2) / ((b.r-b.l)/2);   // 左边缘 -1 → 右边缘 +1
+      target = Math.max(-1, Math.min(1, t));
+    } else {
+      target = 0;                                       // 离开中间区域 → 回到原型形态
+    }
+    hero.classList.toggle("is-inside", inside);
+  });
+  hero.addEventListener("pointerleave", () => { target = 0; hero.classList.remove("is-inside"); });
+
+  /* 点击中间窗口任意位置都进作品页（光标 pointer-events:none，交给 hero 统一判断） */
+  hero.addEventListener("click", e => {
+    if(mqStatic.matches) return;
+    const { nx, ny } = norm(e);
+    if(inMid(nx, ny)) window.location.href = "works.html";
+  });
+
+  function frame(){
+    const k = mqReduce.matches ? 1 : 0.12;             // 形状缓动
+    cur += (target - cur) * k;
+    if(Math.abs(target - cur) < 0.0005) cur = target;
+    paint(cur);
+    if(!mqStatic.matches){
+      const ck = mqReduce.matches ? 1 : 0.34;          // 光标跟手但带一点重量
+      cx += (mx - cx) * ck; cy += (my - cy) * ck;
+      cursor.style.transform =
+        "translate3d(" + cx.toFixed(1) + "px," + cy.toFixed(1) + "px,0) translate(-50%,-50%)";
+    }
+    requestAnimationFrame(frame);
+  }
+
+  paint(0);
+  if(mqReduce.matches){
+    /* 减少动效：仍然响应，但只在 pointermove 里直接绘制，不跑常驻 rAF */
+    hero.addEventListener("pointermove", e => {
+      cur = target; paint(cur);
+      cursor.style.transform =
+        "translate3d(" + e.clientX + "px," + e.clientY + "px,0) translate(-50%,-50%)";
+    });
+  } else {
+    frame();
+  }
+})();
+</script>
+</body>
+</html>

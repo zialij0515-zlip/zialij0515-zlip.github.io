@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>项目作品 · 赵梁君 Zia</title>
+<link rel="stylesheet" href="assets/site.css" />
+<style>
+  .wrap{max-width:1320px;margin:0 auto;padding:0 40px;}
+  /* ===== 四个作品 banner：模糊色块 + 玻璃小卡 + 淡淡立体 ===== */
+  /* 整组等比缩到 75%：transform:scale 连百分比宽度一起缩，
+     色块 / 卡内字号 / 间距 / 阴影 / 模糊 / 错落 / 3D 位移全部按同一比例走。
+     transform 不改布局占位，故外层高度由 fitTabsShell() 按 0.75 补偿，避免下方留白。
+     想恢复原尺寸：把这里的 .75 与 fitTabsShell() 里的 .75 一起改成 1。 */
+  .tabs-shell{margin:34px 0 66px;}
+  /* 只改变间距，让四个 banner 整组铺满到与下方展示区同宽（左右边缘对齐）。
+     scale(.75) 会连宽度一起缩，故未缩放宽 = 100%/.75 = 133.333%，
+     并左移 16.667% 使缩放后整组正好落在 0~100%。
+     四列锁死为缩放前的 296.5px（缩放后仍是 222.4px，四块尺寸一点没变），
+     剩余宽度交给 space-between 平均分给 3 个间隙 —— 变的只有间距。 */
+  .tabs{
+    width:133.3333%;margin:0 0 0 -16.6667%;
+    transform:scale(.75);transform-origin:top center;
+    display:grid;grid-template-columns:repeat(4,296.5px);
+    justify-content:space-between;gap:0;
+    align-items:start;
+  }
+  .tab{
+    position:relative;display:block;width:100%;padding:0;text-align:left;
+    background:none;border:0;overflow:visible;
+  }
+  /* 横向错落：四张高低不一，但都在同一行 */
+  .tab:nth-child(1){margin-top:0;}
+  .tab:nth-child(2){margin-top:64px;}
+  .tab:nth-child(3){margin-top:24px;}
+  .tab:nth-child(4){margin-top:84px;}
+
+  /* 3D 舞台：角度很小，只要「浮起来一点」的感觉 */
+  .bn{
+    position:relative;display:block;width:100%;aspect-ratio:1/1.04;
+    transform-style:preserve-3d;
+    transform:perspective(900px) rotateY(var(--ry,-5deg)) rotateX(var(--rx,3deg));
+    transition:transform .5s cubic-bezier(.22,1,.36,1);
+  }
+  /* 外圈晕开的光，负责「模糊到背景里」 */
+  .bn .halo{
+    position:absolute;inset:-10%;border-radius:44px;z-index:0;
+    background:var(--halo);filter:blur(19px);opacity:.72;transition:opacity .5s;
+  }
+  /* 彩色底块：保留圆角方块的轮廓，只糊一点点边 */
+  .bn .bg{
+    position:absolute;inset:0;border-radius:26px;overflow:hidden;z-index:1;
+    background:var(--bg2);filter:blur(5px);
+    box-shadow:0 18px 32px rgba(66,48,28,.2),
+               inset 0 0 0 1px rgba(255,255,255,.22),
+               inset 0 0 34px rgba(255,255,255,.12);
+  }
+  .bn .bg::after{content:"";position:absolute;inset:-20%;background:var(--deco);}
+  /* 落地阴影：让整块有「放在桌面上」的淡淡立体感 */
+  .bn::after{
+    content:"";position:absolute;left:10%;right:10%;bottom:-9px;height:22px;
+    border-radius:50%;background:rgba(62,46,28,.17);filter:blur(11px);
+    z-index:0;transform:translateZ(-24px);pointer-events:none;
+    transition:bottom .5s,left .5s,right .5s,opacity .5s;
+  }
+  .tab:hover .bn::after{bottom:-16px;left:5%;right:5%;opacity:.72;}
+  /* 中间那张清晰的小卡：靠 translateZ 从底块上浮起来 */
+  .bn .glass{
+    position:absolute;z-index:2;left:50%;top:50%;width:70%;min-height:58%;
+    transform:translate(-50%,-50%) translateZ(26px);
+    border-radius:13px;padding:11px 12px;
+    background:var(--glass);border:1px solid var(--glass-line,rgba(255,255,255,.5));
+    box-shadow:0 16px 28px rgba(24,18,10,.22),0 3px 8px rgba(24,18,10,.12),
+               inset 0 1px 0 rgba(255,255,255,.4);
+    backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+    color:var(--ink,#2B2118);
+    display:flex;flex-direction:column;gap:5px;
+    font-size:8.6px;line-height:1.35;letter-spacing:.01em;
+    transition:transform .5s cubic-bezier(.22,1,.36,1),box-shadow .5s;
+  }
+  .tab:hover .bn{transform:perspective(900px) rotateY(0deg) rotateX(0deg) translateY(-7px);}
+  .tab:hover .bn .glass{
+    transform:translate(-50%,-50%) translateZ(40px);
+    box-shadow:0 24px 38px rgba(24,18,10,.26),0 4px 10px rgba(24,18,10,.14),
+               inset 0 1px 0 rgba(255,255,255,.45);
+  }
+  .tab:hover .bn .halo{opacity:1;}
+  .tab.on .bn{transform:perspective(900px) rotateY(0deg) rotateX(0deg) translateY(-4px);}
+  .tab.on .bn .glass{transform:translate(-50%,-50%) translateZ(34px);}
+  .tab.on .bn .bg{box-shadow:0 16px 30px rgba(66,48,28,.2),inset 0 0 0 2px rgba(255,248,238,.7);}
+  .tab.on .bn .halo{opacity:1;}
+
+  /* banner 下方保留作品名，方便辨认点的是哪个 */
+  /* 整组 scale(.75) 会把这里的字压到 9.4/7.9px；按 1/0.75 放大，
+     屏幕上实际显示回到 13.5/11.25px（≈最开始的字体大小）。 */
+  .tab .cap{display:block;margin-top:20px;padding-left:2px;}
+  .tab .nm{display:block;font-size:19px;font-weight:600;letter-spacing:-.01em;line-height:1.4;color:var(--fg);transition:color .3s;}
+  .tab .sh{display:block;font-size:16px;color:var(--muted);margin-top:4px;}
+  .tab.on .nm{color:var(--accent);}
+  .tab.on .cap::after{content:"";display:block;width:22px;height:2px;margin-top:9px;background:var(--accent);border-radius:2px;}
+
+  /* ---- 玻璃卡里通用的微型 UI 元件 ---- */
+  .glass .g-row{display:flex;align-items:center;justify-content:space-between;gap:6px;}
+  .glass .g-cap{font-size:8px;letter-spacing:.02em;opacity:.9;}
+  .glass .g-line{height:1px;background:currentColor;opacity:.18;margin:2px 0;}
+  .glass .g-lbl{font-size:7px;letter-spacing:.14em;text-transform:uppercase;opacity:.6;}
+  .glass .g-amount{font-size:18px;font-weight:600;letter-spacing:-.045em;line-height:1.1;}
+  .glass .g-faint{opacity:.62;}
+  .glass .g-pill{display:inline-block;padding:3px 7px;border-radius:5px;font-size:7.2px;color:#fff;line-height:1;}
+  .glass .g-two{display:flex;gap:4px;margin:1px 0 3px;}
+  .glass .g-three{display:flex;justify-content:space-between;font-size:7.6px;opacity:.8;}
+  .glass .g-av{width:12px;height:12px;border-radius:50%;flex:none;box-shadow:0 0 0 1px rgba(255,255,255,.35);}
+  .glass .g-person{display:flex;align-items:center;gap:6px;font-size:8.2px;}
+  .glass .g-person span:last-child{margin-left:auto;opacity:.9;}
+  .glass .g-btn{display:block;text-align:center;padding:6px;border-radius:6px;color:#F5F1E6;font-size:8px;margin-top:3px;}
+  .glass .g-strong{font-size:14px;font-weight:700;letter-spacing:-.03em;}
+  .glass .g-spread{letter-spacing:.16em;font-size:8.6px;}
+  .glass .g-status{display:flex;justify-content:space-between;font-size:7.2px;opacity:.7;}
+  .glass .g-head{display:flex;justify-content:space-between;align-items:center;font-size:9.6px;font-weight:600;}
+  .glass .g-rows{display:flex;flex-direction:column;gap:4px;}
+  .glass .g-kv{display:flex;justify-content:space-between;font-size:7.8px;gap:6px;}
+  .glass .g-kv span:first-child{opacity:.62;}
+
+  /* 内容切换淡入 */
+  .pane{animation:fade .45s ease both;}
+  @keyframes fade{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+  /* 标题行：左边文字、右边（仅轻减日记）小程序码并排，二维码不会压住副标题 */
+  .ttl{display:flex;align-items:center;gap:clamp(20px,3.4vw,46px);margin-bottom:26px;}
+  .ttl.has-qr{margin-bottom:20px;}
+  .ttl-txt{min-width:0;}
+  /* 换回原本的系统字体（不要艺术字体）；字号保留上一轮的小两个号 */
+  .ttl h2{font-weight:500;letter-spacing:-.038em;line-height:1.18;font-size:clamp(22px,3.05vw,34px);}
+  .ttl p{color:var(--muted);margin-top:10px;font-size:14.5px;}
+
+  /* ===== 小程序码：白圆角卡 + 侧挂暖棕标签 =====
+     配色取 data-tone=4 的米棕色系，描边与阴影都压得很淡，融进浅色底而不是硬贴一块白。
+     不加 hover / 动画，跟整页克制风格一致。 */
+  .qr-wrap{display:flex;align-items:center;gap:11px;flex:none;}
+  .qr-card{
+    /* 圆角、描边、外发光沿用下面三个 .box 的同一套 tone 变量，看起来是「一族的卡片」 */
+    width:130px;height:130px;flex:none;padding:6px;
+    background:#FFFDF8;border-radius:16px;
+    border:1px solid rgba(107,96,73,.12);
+    box-shadow:0 0 26px 2px var(--tone-glow,rgba(107,96,73,.12)),
+               0 10px 24px var(--tone-shadow,rgba(107,96,73,.10)),
+               inset 0 1px 0 rgba(255,255,255,.9);
+  }
+  .qr-card img{width:100%;height:100%;display:block;object-fit:contain;border-radius:6px;}
+  .qr-tag{
+    flex:none;white-space:nowrap;
+    font-size:11.5px;letter-spacing:.05em;line-height:1.2;color:#6B6049;
+    background:linear-gradient(155deg,#F8F1E3,#E7DABE);
+    border:1px solid rgba(107,96,73,.14);border-radius:5px;
+    padding:7px 11px;
+    box-shadow:0 2px 8px rgba(107,96,73,.06);
+  }
+
+  /* Grida 三框：缩略图 / 文字说明 / demo 封面 */
+  /* ===== 展示区三框：主题色跟随上方对应的那个 banner ===== */
+  /* 01 低饱和雾蓝（与上方 banner 同步改暗）；--tone-glow 供三框发光 */
+  .pane[data-tone="1"]{--tone-a:#F3F5F7;--tone-b:#DBE3EA;--tone-line:rgba(78,107,130,.30);--tone-shadow:rgba(78,107,130,.17);--tone-glow:rgba(78,107,130,.22);--tone-ink:#3E5A70;--tone-ph:linear-gradient(150deg,#8FA7B8,#4E6B82 56%,#324C60);}
+  .pane[data-tone="2"]{--tone-a:#F1F6EA;--tone-b:#D7E4C3;--tone-line:rgba(61,96,48,.30);--tone-shadow:rgba(61,96,48,.17);--tone-glow:rgba(61,96,48,.20);--tone-ink:#2C4A24;--tone-ph:linear-gradient(150deg,#7C9A52,#3D6030 56%,#16281A);}
+  .pane[data-tone="3"]{--tone-a:#FDF1EF;--tone-b:#F4D5D4;--tone-line:rgba(174,66,75,.30);--tone-shadow:rgba(174,66,75,.17);--tone-glow:rgba(174,66,75,.20);--tone-ink:#A33B45;--tone-ph:linear-gradient(150deg,#E8A3A4,#C6535D 56%,#A33B45);}
+  .pane[data-tone="4"]{--tone-a:#F9F3E6;--tone-b:#E7DABE;--tone-line:rgba(107,96,73,.32);--tone-shadow:rgba(107,96,73,.18);--tone-glow:rgba(107,96,73,.22);--tone-ink:#6B6049;--tone-ph:linear-gradient(150deg,#DED0B2,#B8A582 56%,#6B6049);}
+
+  /* 第一列减半，后两列保持原比例，gap 加宽后仍铺满一行 */
+  .trio{display:grid;grid-template-columns:.5fr 1.05fr 1.35fr;gap:30px;align-items:stretch;}
+  .box{
+    position:relative;border:1px solid var(--tone-line,var(--line));border-radius:16px;
+    background:linear-gradient(155deg,var(--tone-a,var(--card)),var(--tone-b,var(--card)));
+    /* 参考上方 banner 的 halo：一层散开的外发光 + 落地阴影 */
+    box-shadow:0 0 34px 3px var(--tone-glow,transparent),
+               0 14px 30px var(--tone-shadow,rgba(0,0,0,.06)),
+               inset 0 1px 0 rgba(255,255,255,.75);
+    overflow:hidden;
+  }
+  /* 柔光：中心主题色光晕（仿 banner halo）+ 左上高光 + 右下晕开 */
+  .box::before{
+    content:"";position:absolute;inset:-6%;z-index:0;pointer-events:none;
+    background:radial-gradient(ellipse at 50% 42%,var(--tone-glow,transparent),transparent 68%),
+               radial-gradient(ellipse at 18% 0%,rgba(255,255,255,.72),transparent 58%),
+               radial-gradient(ellipse at 88% 100%,var(--tone-shadow,transparent),transparent 62%);
+    filter:blur(6px);
+  }
+  .box .cap{
+    position:relative;z-index:1;
+    display:flex;align-items:center;gap:8px;padding:12px 15px;
+    font-size:11px;letter-spacing:.1em;color:var(--muted);border-bottom:1px solid var(--tone-line,var(--line));
+  }
+  .box .cap .d{width:6px;height:6px;border-radius:50%;background:var(--tone-ink,var(--accent));}
+  .box .body{position:relative;z-index:1;padding:16px;}
+  /* 占位图（作品项目 / 静止封面 / Demo 海报）背景同步主题色 */
+  .pane .ph{--ph-bg:var(--tone-ph)!important;}
+
+  .thumb{height:262px;}
+  .thumb .ph{height:100%;padding:16px;}
+  .thumb .ph .ph-name{font-size:18px;}
+
+  /* 作品项目框（原缩略图）：宽 / 高 / 内部文字整体减半，整块在行高里上下居中 */
+  .box--mini{align-self:center;}
+  .box--mini .cap{padding:6px 8px;font-size:8.5px;letter-spacing:.08em;gap:4px;}
+  .box--mini .cap .d{width:3px;height:3px;}
+  .box--mini .thumb{height:131px;}
+  /* 作品标题不再压在底部：内容垂直居中，Project 小标记留在左上角 */
+  .box--mini .thumb .ph{padding:8px;justify-content:center;gap:5px;}
+  .box--mini .thumb .ph .ph-no{position:absolute;top:8px;left:8px;font-size:7.5px;letter-spacing:.14em;}
+  .box--mini .thumb .ph .ph-label{text-align:center;}
+  .box--mini .thumb .ph .ph-name{font-size:11px;}
+  .box--mini .thumb .ph .ph-sub{font-size:8px;margin-top:2px;}
+  .box--mini .thumb .ph .ph-tag{font-size:7px;padding:2px 5px;right:6px;top:6px;}
+
+  .intro-body{min-height:230px;display:flex;flex-direction:column;justify-content:space-between;}
+  .intro-body .tagline{font-size:16px;line-height:1.55;letter-spacing:-.015em;font-weight:500;}
+  .intro-body .desc{color:var(--muted);font-size:12.5px;line-height:1.7;margin-top:12px;}
+  .intro-body .bullets{margin-top:14px;display:flex;flex-direction:column;gap:7px;}
+  .intro-body .bullets li{list-style:none;font-size:11.5px;color:var(--muted);display:flex;gap:8px;line-height:1.5;}
+  .intro-body .bullets li::before{content:"·";color:var(--accent);font-weight:700;}
+  .intro-body .tech{display:flex;flex-wrap:wrap;gap:6px;margin-top:15px;}
+  .intro-body .tech span{font-size:10.5px;padding:4px 9px;border:1px solid var(--line);border-radius:999px;color:var(--muted);}
+
+  .cover{height:262px;position:relative;cursor:pointer;}
+  .cover .ph{height:100%;padding:16px;}
+  .cover .play-hint{
+    position:absolute;z-index:3;inset:0;display:grid;place-items:center;pointer-events:none;
+  }
+  .cover .play-hint .circ{
+    width:58px;height:58px;border-radius:50%;background:rgba(250,246,238,.94);color:#2B2118;
+    display:grid;place-items:center;font-size:19px;box-shadow:0 10px 26px rgba(20,12,6,.3);
+    transition:transform .3s ease;
+  }
+  .cover:hover .play-hint .circ{transform:scale(1.12);}
+  .cover .ph .ph-name{font-size:18px;}
+
+  /* Demo 展示区 */
+  .demo-sec{margin-top:52px;}
+  .demo-sec .top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px;}
+  .demo-sec .top h3{font-size:clamp(24px,3vw,34px);font-weight:500;letter-spacing:-.035em;}
+  /* 第七轮：demo 视频还原成占满整行（不再被右侧圆挤窄）；
+     next 圆改为绝对定位，移到视频右侧留白区，位置由 positionViewDisc() 精算。 */
+  .demo-row{position:relative;display:block;}
+  .player{width:100%;min-width:0;}
+
+  .screen{
+    position:relative;width:100%;aspect-ratio:16/9;border-radius:16px;overflow:hidden;
+    background:#241B15;border:1px solid var(--tone-line,var(--line));
+    box-shadow:0 14px 30px var(--tone-shadow,rgba(0,0,0,.06));
+  }
+  .screen video{width:100%;height:100%;object-fit:contain;display:block;background:#1A130E;}
+  .screen .poster{position:absolute;inset:0;cursor:pointer;z-index:2;}
+  .screen .poster .ph{height:100%;padding:22px;}
+  .screen .poster .ph .ph-name{font-size:24px;}
+  .screen .poster .tap{
+    position:absolute;z-index:3;left:50%;top:50%;transform:translate(-50%,-50%);
+    display:flex;align-items:center;gap:10px;padding:13px 22px;border-radius:999px;
+    background:rgba(250,246,238,.95);color:#2B2118;font-size:13px;font-weight:600;
+    box-shadow:0 12px 30px rgba(0,0,0,.3);transition:transform .3s ease;
+  }
+  .screen .poster:hover .tap{transform:translate(-50%,-50%) scale(1.06);}
+
+  .controls{
+    margin-top:14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+    padding:12px 16px;border:1px solid var(--line);border-radius:12px;background:var(--card);
+  }
+  .ctrl-btn{
+    display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:999px;
+    border:1px solid var(--line);font-size:12.5px;transition:.2s;
+  }
+  .ctrl-btn:hover{background:var(--surface);border-color:var(--accent);}
+  .ctrl-btn:disabled{opacity:.42;cursor:not-allowed;pointer-events:none;}
+  .ctrl-btn.primary{background:var(--accent);color:#FFF8EE;border-color:var(--accent);font-weight:600;}
+  .ctrl-btn.primary:hover{opacity:.88;}
+  .speed{display:flex;align-items:center;gap:10px;margin-left:auto;font-size:12px;color:var(--muted);}
+  .speed input[type=range]{width:110px;accent-color:var(--accent);cursor:pointer;}
+  .speed .val{min-width:38px;color:var(--fg);font-variant-numeric:tabular-nums;}
+  .timecode{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums;}
+
+  /* 可拖拽播放进度条：细条 + 已播放填充，沿用暖棕主题，不引入新色 */
+  .seekbar{margin-top:10px;padding:0 2px;}
+  .seekbar input[type=range]{
+    -webkit-appearance:none;appearance:none;display:block;width:100%;height:6px;margin:0;
+    border-radius:999px;cursor:pointer;outline:none;
+    background:linear-gradient(90deg,var(--accent) 0%,var(--accent) var(--played,0%),var(--line) var(--played,0%),var(--line) 100%);
+  }
+  .seekbar input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;appearance:none;width:14px;height:14px;border-radius:50%;
+    background:var(--card);border:2px solid var(--accent);box-shadow:0 1px 4px rgba(40,28,18,.22);
+    cursor:grab;transition:transform .15s;
+  }
+  .seekbar input[type=range]::-webkit-slider-thumb:active{cursor:grabbing;transform:scale(1.15);}
+  .seekbar input[type=range]::-moz-range-thumb{
+    width:14px;height:14px;border-radius:50%;background:var(--card);
+    border:2px solid var(--accent);box-shadow:0 1px 4px rgba(40,28,18,.22);cursor:grab;
+  }
+  .seekbar input[type=range]:disabled{opacity:.45;cursor:not-allowed;}
+  .seekbar input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:4px;}
+
+  .demo-note{margin-top:10px;font-size:11.5px;color:var(--muted);}
+  /* 只在播放出问题时出现，正常播放完全不显示 */
+  .player-note{margin-top:10px;font-size:11.5px;line-height:1.7;color:var(--accent);}
+  .player-note[hidden]{display:none!important;}
+
+  /* 视频右侧的 next 圆：首页同款深棕圆盘，放大一档，四个作品统一。
+     绝对定位到视频右侧留白（不占布局宽度，所以视频能占满整行）；
+     上下居中与右移幅度由 positionViewDisc() 按画面高度 / 页面留白精算。
+     不加发光（按上一轮要求），hover 只有轻微缩放。 */
+  .view-col{
+    position:absolute;right:-68px;top:0;z-index:5;
+    width:clamp(64px,5.25vw,75px);
+    display:flex;align-items:center;justify-content:center;
+  }
+  /* 页面右侧留白不够放下整圆时，降级成视频下方居中 */
+  .view-col.is-below{position:static;width:100%;margin-top:14px;justify-content:center;}
+  .view-disc{
+    /* 圆整体比上一版放大 1.5 倍；.arrow / .label 的字号一律不动 */
+    width:clamp(64px,5.25vw,75px);height:clamp(64px,5.25vw,75px);border-radius:50%;
+    background:#4A382A;color:#F6EFE3;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    box-shadow:0 12px 28px rgba(40,28,18,.26);
+    transition:transform .3s cubic-bezier(.22,1,.36,1);
+  }
+  .view-col:hover .view-disc,
+  .view-col:focus-visible .view-disc{transform:scale(1.07);}
+  .view-col:focus-visible{outline:2px solid var(--accent);outline-offset:6px;border-radius:50%;}
+  .view-disc .arrow{font-size:clamp(24px,2.6vw,34px);line-height:1;font-weight:700;}
+  .view-disc .label{font-size:clamp(9px,.9vw,11px);letter-spacing:.24em;line-height:1.3;}
+
+  .docs{margin-top:26px;display:flex;flex-wrap:wrap;gap:9px;align-items:center;}
+  .docs .lbl{font-size:11px;color:var(--muted);letter-spacing:.1em;margin-right:4px;}
+  .docs a{font-size:12px;padding:8px 14px;border:1px solid var(--line);border-radius:999px;transition:.2s;}
+  .docs a:hover{background:var(--surface);border-color:var(--accent);}
+
+  /* ===== 相关文档：胶囊沿用参考图样式，点击改为「在本页嵌入预览」 ===== */
+  .chip{
+    display:inline-flex;align-items:center;gap:5px;font:inherit;font-size:12px;
+    padding:8px 14px;border:1px solid var(--line);border-radius:999px;
+    background:transparent;color:var(--fg);text-decoration:none;line-height:1.2;
+    cursor:pointer;transition:background .2s,border-color .2s,color .2s;
+  }
+  .chip:hover{background:var(--surface);border-color:var(--accent);}
+  .chip.on{background:var(--accent);color:#FFF8EE;border-color:var(--accent);}
+  .docs .empty{font-size:12px;color:var(--muted);opacity:.85;}
+
+  /* 全部资料（不绑定具体作品的素材也在这里） */
+  .assets-toggle{
+    margin-left:auto;font:inherit;font-size:11.5px;color:var(--muted);background:none;
+    border:0;border-bottom:1px dashed var(--line);cursor:pointer;padding:6px 2px;
+  }
+  .assets-toggle:hover{color:var(--fg);}
+  .assets{
+    margin-top:16px;padding:18px;border:1px solid var(--line);border-radius:14px;
+    background:var(--card);
+  }
+  .assets__head{font-size:11px;color:var(--muted);letter-spacing:.08em;margin-bottom:10px;}
+  .assets__grid{display:flex;flex-wrap:wrap;gap:8px;}
+  .assets__group{width:100%;font-size:10.5px;color:var(--muted);letter-spacing:.12em;margin:8px 0 2px;}
+  .assets .chip{font-size:11.5px;padding:6px 12px;}
+
+  /* 嵌入阅读面板 */
+  .doc-embed{
+    margin-top:14px;border:1px solid var(--line);border-radius:14px;overflow:hidden;
+    background:var(--card);box-shadow:0 12px 30px var(--tone-shadow,rgba(0,0,0,.06));
+  }
+  .doc-embed[hidden],.assets[hidden]{display:none;}
+  .doc-embed__bar{
+    display:flex;align-items:center;gap:14px;padding:10px 16px;
+    border-bottom:1px solid var(--line);font-size:12px;background:var(--surface);
+  }
+  .doc-embed__title{font-weight:600;color:var(--fg);}
+  .doc-embed__bar a{margin-left:auto;color:var(--accent);font-size:11.5px;text-decoration:none;}
+  .doc-embed__bar button{
+    font:inherit;font-size:11.5px;color:var(--muted);background:none;border:0;cursor:pointer;
+  }
+  .doc-embed__bar button:hover{color:var(--fg);}
+  .doc-embed iframe{display:block;width:100%;height:min(62vh,620px);border:0;background:var(--bg);}
+
+  @media(max-width:1000px){
+    .trio{grid-template-columns:.7fr 1fr;gap:20px;}
+    .cover{grid-column:1/-1;height:220px;}
+    .tabs-shell{margin-bottom:48px;}
+    .tabs{width:100%;margin-left:0;grid-template-columns:repeat(2,1fr);justify-content:normal;gap:34px;}
+    .tab:nth-child(1){margin-top:0;}
+    .tab:nth-child(2){margin-top:34px;}
+    .tab:nth-child(3){margin-top:0;}
+    .tab:nth-child(4){margin-top:34px;}
+  }
+  @media(max-width:700px){
+    .wrap{padding:0 20px;}
+    .tabs-shell{margin:22px 0 40px;}
+    .tabs{gap:22px;}
+    .tab:nth-child(2),.tab:nth-child(4){margin-top:22px;}
+    .bn .glass{width:76%;padding:8px 9px;}
+    .tab .cap{margin-top:12px;}
+    .tab .nm{font-size:14.5px;}
+    .tab .sh{font-size:12.5px;}
+    /* 窄屏：二维码换到标题下方单独一行，不挤压文字 */
+    .ttl{flex-direction:column;align-items:flex-start;gap:18px;}
+    .qr-card{width:112px;height:112px;}
+    .trio{grid-template-columns:1fr;gap:20px;}
+    .box--mini .thumb{height:104px;}
+    .cover{grid-column:auto;}
+    .view-col{position:static;right:auto;width:100%;padding:8px 0 2px;margin-top:6px;}
+    .speed{margin-left:0;width:100%;}
+    .assets-toggle{margin-left:0;width:100%;text-align:left;}
+    .doc-embed iframe{height:70vh;}
+    .doc-embed__bar{gap:9px;flex-wrap:wrap;}
+  }
+</style>
+</head>
+<body data-page="works">
+
+<nav class="nav" id="nav"></nav>
+
+<div class="wrap">
+  <div class="tabs-shell reveal" id="tabsShell"><div class="tabs" id="tabs"></div></div>
+
+  <div id="pane"></div>
+</div>
+
+<footer class="page-foot">
+  <span>© 2026 赵梁君 Zia · AI 产品经理作品集</span>
+  <span><a href="index.html">← 回到首页</a></span>
+</footer>
+
+<script src="assets/site.js"></script>
+<script>
+  mountNav("works");
+
+  /* 顶部四个 banner 的显示顺序（值是 PROJECTS 的索引，从 0 起）。
+     只调视觉顺序：编号 / BANNERS 样式 / 主题色 / ?p= 参数仍按原索引，
+     所以点击后展示区、视频、文档、配色都自动跟对应作品走，不会串位。
+     想再换顺序只改这一行。 */
+  const TAB_ORDER = [3, 2, 0, 1];   /* 轻减日记 / AI智能测试平台 / TikTok / WrenAI×基金养老数据治理 */
+  const params = new URLSearchParams(location.search);
+  /* 没带 ?p= 时默认选中视觉上的第一个 banner */
+  let current = Math.min(4, Math.max(1, parseInt(params.get("p") || String(TAB_ORDER[0]+1),10) || 1));
+  let video = null;
+  let activeSrc = "";   // 当前作品（或「全部资料」里点选）的录屏源
+  let noteTimer = null;
+  /* 播放异常时给一句看得懂的提示，避免"点了没反应" */
+  function note(msg){
+    const n = document.getElementById("playerNote");
+    if(!n) return;
+    n.textContent = msg || "";
+    n.hidden = !msg;
+  }
+  function clearNoteTimer(){ if(noteTimer){ clearTimeout(noteTimer); noteTimer = null; } }
+
+  /* 四个 banner：纯 CSS 复刻参考图的四种「模糊色块 + 玻璃小卡」样式。
+     不引入任何外部图片 / webfont，改配色只动 style 里的 --bg2 / --deco / --glass。 */
+  /* 四个作品各自对应的成品 Demo（A/B/C/D）。发布版只保留这四段。
+     preload=none：不预加载，只有点播才拉文件，不拖慢首屏。 */
+  const REELS = [
+    {t:"01 · TikTok 答疑助手 Demo", src:"videos/A_demo.mp4"},
+    {t:"02 · WrenAI×基金养老数据治理 Demo", src:"videos/B_demo.mp4"},
+    {t:"03 · AI智能测试平台 Demo", src:"videos/C_demo.mp4"},
+    {t:"04 · 轻减日记小程序 Demo", src:"videos/D_demo.mp4"}
+  ];
+
+  /* 不绑定具体作品、但确实存在的资料，也放进「全部资料」 */
+  const EXTRA_DOCS = [
+    {t:"附 · 电商助手 PRD", f:"extra-ecommerce-prd.md"},
+    {t:"附 · 电商助手指标表与用例", f:"extra-ecommerce-metrics.md"},
+    {t:"附 · 在线文档首页草稿", f:"extra-docs-home-draft.md"}
+  ];
+  const ALL_DOCS = (() => {
+    const seen = new Set(), out = [];
+    PROJECTS.forEach(p => p.docs.forEach(d => {
+      if(!seen.has(d.f)){ seen.add(d.f); out.push(d); }
+    }));
+    EXTRA_DOCS.forEach(d => {
+      if(!seen.has(d.f)){ seen.add(d.f); out.push(d); }
+    });
+    return out;
+  })();
+  const ASSET_COUNT = ALL_DOCS.length + REELS.length;
+
+  /* md → 页内嵌入预览；xlsx → 直接下载 */
+  const chipHTML = d => d.f.endsWith(".md")
+    ? `<button type="button" class="chip" data-doc="${d.f}" data-title="${d.t}">${d.t} ↗</button>`
+    : `<a class="chip" href="docs/${d.f}" download>${d.t} ↓</a>`;
+
+  function assetsHTML(){
+    return `<div class="assets__head">站点内全部素材 · ${ASSET_COUNT} 项（点开即可在此页看）</div>
+      <div class="assets__grid">
+        <div class="assets__group">文档 · ${ALL_DOCS.length} 份</div>
+        ${ALL_DOCS.map(chipHTML).join("")}
+        <div class="assets__group">录屏 · ${REELS.length} 段</div>
+        ${REELS.map(r=>`<button type="button" class="chip" data-src="${r.src}">${r.t} ▶</button>`).join("")}
+      </div>`;
+  }
+
+  const BANNERS = [
+    /* 01 · 蓝 · 白色钱包手机卡 */
+    `<span class="bn" style="--halo:radial-gradient(circle at 50% 44%,rgba(86,116,138,.8),rgba(86,116,138,0) 72%);--bg2:radial-gradient(circle at 50% 38%,#8FA7B8,#4E6B82 52%,#AEBFC9 100%);--deco:radial-gradient(ellipse at 22% 12%,rgba(255,255,255,.34),transparent 46%);--glass:#FCFDFE;--glass-line:rgba(255,255,255,.9);--ink:#1E242C;--ry:-9deg;--rx:4deg">
+      <span class="halo"></span><span class="bg"></span>
+      <span class="glass">
+        <span class="g-status"><span>AI · 24h 在线</span><span>▮▮▮ ▰</span></span>
+        <span class="g-head">课程答疑 <span style="font-size:8px;opacity:.5">●</span></span>
+        <span class="g-two"><span class="g-pill" style="background:#4E6B82">提个问题</span><span class="g-pill" style="background:#4CAF7D">查来源</span></span>
+        <span class="g-lbl">知识命中率 HIT RATE</span>
+        <span class="g-amount">85% <span style="font-size:9px;font-weight:400;opacity:.6">命中</span></span>
+        <span class="g-three"><span>课程咨询</span><span>知识问答</span><span>敏感词拒答</span></span>
+        <span class="g-line"></span>
+        <span class="g-row"><span>567 条真实问答</span><span class="g-faint">返回来源片段</span></span>
+        <span class="g-row g-faint"><span>未命中 → 待补充清单</span><span>0% 转人工</span></span>
+      </span>
+    </span>`,
+
+    /* 02 · 深绿植物 · 半透明创作者收款列表 */
+    `<span class="bn" style="--halo:radial-gradient(circle at 50% 50%,rgba(72,104,44,.8),rgba(72,104,44,0) 72%);--bg2:linear-gradient(145deg,#16281A,#3D6030 44%,#7C9A52 74%,#1E321C);--deco:radial-gradient(ellipse at 18% 18%,rgba(178,205,110,.5),transparent 42%),radial-gradient(ellipse at 82% 88%,rgba(8,22,10,.72),transparent 55%),repeating-linear-gradient(52deg,transparent 0 15px,rgba(190,215,130,.1) 15px 18px);--glass:rgba(26,46,26,.5);--glass-line:rgba(222,238,192,.3);--ink:#F1F6E7;--ry:8deg;--rx:3deg">
+      <span class="halo"></span><span class="bg"></span>
+      <span class="glass">
+        <span class="g-cap">6 大指标口径 · 唯一事实来源</span>
+        <span class="g-line"></span>
+        <span class="g-rows">
+          <span class="g-person"><span class="g-av" style="background:linear-gradient(135deg,#E9B48C,#A65C4A)"></span><span>AUM</span><span>8.73 亿</span></span>
+          <span class="g-person"><span class="g-av" style="background:linear-gradient(135deg,#C9D9A0,#5E7B4A)"></span><span>渗透率</span><span>MDL 建模</span></span>
+          <span class="g-person"><span class="g-av" style="background:linear-gradient(135deg,#E3C69B,#8B5E3C)"></span><span>定投留存</span><span>SQL pairs</span></span>
+          <span class="g-person"><span class="g-av" style="background:linear-gradient(135deg,#B7C9D6,#4C6A7E)"></span><span>SQL 正确率</span><span>20% → 90%</span></span>
+        </span>
+      </span>
+    </span>`,
+
+    /* 03 · 砖红 · 白色斜波浪 + 虚拟卡 */
+    `<span class="bn" style="--halo:radial-gradient(circle at 50% 48%,rgba(206,92,102,.82),rgba(206,92,102,0) 72%);--bg2:linear-gradient(150deg,#DC8C8E,#C6535D 58%,#AE424B);--deco:linear-gradient(116deg,transparent 20%,rgba(255,255,255,.4) 24%,transparent 30%,transparent 52%,rgba(255,255,255,.3) 56%,transparent 62%),radial-gradient(ellipse at 82% 14%,rgba(255,255,255,.2),transparent 45%);--glass:rgba(150,40,48,.42);--glass-line:rgba(255,238,234,.6);--ink:#FFF4F0;--ry:-8deg;--rx:3deg">
+      <span class="halo"></span><span class="bg"></span>
+      <span class="glass" style="width:62%;min-height:46%;justify-content:space-between;border-radius:11px;border-width:2px;padding:9px 10px">
+        <span class="g-row"><span style="font-size:6.4px;opacity:.9;padding:3px 6px;border:1px solid currentColor;border-radius:999px;white-space:nowrap">需求文档 → 测试用例</span><span style="font-size:6.4px;opacity:.7">RAG</span></span>
+        <span>
+          <span class="g-strong" style="display:block">测试用例集</span>
+          <span class="g-spread" style="display:block;margin-top:13px">312 / 312 PASSED</span>
+          <span class="g-row" style="margin-top:8px;font-size:6.8px;opacity:.82"><span>人工确认闭环</span><span>覆盖 100%</span></span>
+        </span>
+      </span>
+    </span>`,
+
+    /* 04 · 沙棕 · 提现表单 */
+    `<span class="bn" style="--halo:radial-gradient(circle at 50% 50%,rgba(176,158,124,.72),rgba(176,158,124,0) 74%);--bg2:linear-gradient(160deg,#DED0B2,#B8A582 55%,#6B6049);--deco:radial-gradient(ellipse at 8% 92%,rgba(38,44,28,.6),transparent 48%),linear-gradient(112deg,transparent 38%,rgba(255,255,255,.2) 40%,transparent 44%);--glass:rgba(242,236,221,.66);--glass-line:rgba(255,255,255,.6);--ink:#3B342A;--ry:9deg;--rx:3deg">
+      <span class="halo"></span><span class="bg"></span>
+      <span class="glass">
+        <span class="g-lbl" style="text-align:center;opacity:.75">轻减日记 · 功能速览</span>
+        <span class="g-line"></span>
+        <span class="g-rows">
+          <span class="g-kv"><span>打卡类型</span><span>5 个集合隔离</span></span>
+          <span class="g-kv"><span>食物库</span><span>97 项自动算热量</span></span>
+          <span class="g-kv"><span>身体分析</span><span>BMI / 体脂率</span></span>
+        </span>
+        <span class="g-btn" style="background:#1E3A31">完成打卡 ✓</span>
+      </span>
+    </span>`
+  ];
+
+  function renderTabs(){
+    document.getElementById("tabs").innerHTML = TAB_ORDER.map(idx=>{
+      const p = PROJECTS[idx];
+      return `
+      <button class="tab ${idx+1===current?"on":""}" data-i="${idx+1}" aria-label="${p.name}">
+        ${BANNERS[idx]}
+        <span class="cap"><span class="nm">${p.name}</span><span class="sh">${p.short}</span></span>
+      </button>`;
+    }).join("");
+    document.querySelectorAll(".tab").forEach(b=>{
+      b.onclick = () => select(parseInt(b.dataset.i,10));
+    });
+    fitTabsShell();
+  }
+
+  /* scale 不改变布局占位：把 shell 高度收到缩放后的视觉高度，避免下方留白 */
+  function fitTabsShell(){
+    const tabs = document.getElementById("tabs");
+    const shell = document.getElementById("tabsShell");
+    if(!tabs || !shell) return;
+    shell.style.height = Math.ceil(tabs.scrollHeight * 0.75) + "px";
+  }
+  window.addEventListener("resize", fitTabsShell);
+
+  function renderPane(){
+    const p = PROJECTS[current-1];
+    document.getElementById("pane").innerHTML = `
+      <div class="pane" data-tone="${current}">
+        <div class="ttl ${p.qr?"has-qr":""}">
+          <div class="ttl-txt">
+            <h2>${p.name}</h2>
+            <p>${p.tagline}</p>
+          </div>
+          ${p.qr?`
+          <div class="qr-wrap">
+            <div class="qr-card"><img src="${p.qr.src}" alt="${p.name} 小程序码 · 微信扫码体验" /></div>
+            <span class="qr-tag">← ${p.qr.label}</span>
+          </div>`:""}
+        </div>
+
+        <div class="trio">
+          <div class="box box--mini">
+            <div class="cap"><span class="d"></span>作品项目</div>
+            <div class="body" style="padding:0">
+              <div class="thumb">${phHTML(p)}</div>
+            </div>
+          </div>
+
+          <div class="box">
+            <div class="cap"><span class="d"></span>作品简述</div>
+            <div class="body intro-body">
+              <div>
+                <div class="tagline">${p.tagline}</div>
+                <div class="desc">${p.desc}</div>
+                <ul class="bullets">${p.bullets.map(b=>`<li>${b}</li>`).join("")}</ul>
+              </div>
+              <div class="tech">${p.tech.map(t=>`<span>${t}</span>`).join("")}</div>
+            </div>
+          </div>
+
+          <div class="box">
+            <div class="cap"><span class="d"></span>Demo</div>
+            <div class="body" style="padding:0">
+              <div class="cover" id="coverJump">
+                ${phHTML(p)}
+                ${p.video?'<div class="play-hint"><span class="circ">▶</span></div>':''}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-sec">
+          <div class="top">
+            <div>
+              <div class="eyebrow" style="margin-bottom:8px">Demo / 录屏回放</div>
+              <h3>看它跑起来的样子。</h3>
+            </div>
+            <div class="muted" style="font-size:12px">${p.metrics.map(m=>m.n?`${m.l} ${m.n}`:m.l).join(" · ")}</div>
+          </div>
+
+          <div class="demo-row">
+            <div class="player">
+              <div class="screen">
+                <video id="video" preload="none" playsinline></video>
+                <div class="poster" id="poster">
+                  ${phHTML(p)}
+                  ${p.video?'<div class="tap">▶ 点击播放 Demo</div>':'<div class="tap">Demo 录制中 · 待补</div>'}
+                </div>
+              </div>
+
+              <div class="seekbar">
+                <input type="range" id="seek" min="0" max="1000" step="1" value="0" aria-label="播放进度，可拖拽" ${!p.video?"disabled":""} />
+              </div>
+
+              <div class="controls">
+                <button class="ctrl-btn primary" id="playBtn" ${!p.video?"disabled":""}>▶ 播放</button>
+                <button class="ctrl-btn" id="restartBtn" ${!p.video?"disabled":""}>↺ 重播</button>
+                <span class="timecode" id="timecode">00:00 / 00:00</span>
+                <div class="speed">
+                  <span>Speed</span>
+                  <input type="range" id="speed" min="0.5" max="2" step="0.25" value="1" />
+                  <span class="val" id="speedVal">1.0x</span>
+                </div>
+              </div>
+              ${p.demoNote?`<div class="demo-note">※ ${p.demoNote}</div>`:""}
+              <div class="player-note" id="playerNote" hidden></div>
+            </div>
+
+            <a class="view-col" href="timeline.html" aria-label="查看我的经历时间线">
+              <span class="view-disc">
+                <span class="arrow">→</span>
+                <span class="label">netx</span>
+              </span>
+            </a>
+          </div>
+
+          <div class="docs">
+            <span class="lbl">相关文档</span>
+            ${p.docs.map(chipHTML).join("")}
+            ${p.github?`<a class="chip" href="${p.github}" target="_blank" rel="noopener">GitHub 仓库 ↗</a>`:""}
+            ${!p.docs.length?`<span class="empty">该作品暂无文档，录屏见上方 Demo 区</span>`:""}
+            <button type="button" class="assets-toggle" id="assetsToggle">全部资料 ${ASSET_COUNT} 项 ▾</button>
+          </div>
+
+          <div class="doc-embed" id="docEmbed" hidden>
+            <div class="doc-embed__bar">
+              <span class="doc-embed__title" id="docEmbedTitle"></span>
+              <a id="docEmbedOpen" href="#" target="_blank" rel="noopener">新窗口打开 ↗</a>
+              <button type="button" id="docEmbedClose">收起 ×</button>
+            </div>
+            <iframe id="docFrame" title="文档预览" src="about:blank" loading="lazy"></iframe>
+          </div>
+
+          <div class="assets" id="assets" hidden>${assetsHTML()}</div>
+        </div>
+      </div>`;
+
+    bindPlayer(p);
+    bindDocs();
+    positionViewDisc();
+  }
+
+  /* next 圆相对视频画面（.screen）上下居中；
+     右移幅度受限于「内容区右边界 → 视口右边」的留白，避免撑出横向滚动条 */
+  function positionViewDisc(){
+    const screen = document.querySelector(".screen");
+    const col = document.querySelector(".view-col");
+    const disc = document.querySelector(".view-disc");
+    if(!screen || !col || !disc) return;
+    const h = screen.getBoundingClientRect().height;
+    /* 用可见宽度而非 innerWidth：后者含垂直滚动条，会把右侧留白多算 15px 导致横向溢出 */
+    const cw = document.documentElement.clientWidth;
+    const wrapW = Math.min(cw, 1320);
+    const gap = (cw - wrapW) / 2 + 40;                   /* 内容区右边界 → 视口右边 */
+    /* 窄屏 → 静态排在视频下方，避免撑出横向滚动条 */
+    if(matchMedia("(max-width:900px)").matches){
+      col.classList.add("is-below");
+      col.style.top = ""; col.style.right = ""; col.style.width = "";
+      disc.style.width = ""; disc.style.height = "";
+      return;
+    }
+    col.classList.remove("is-below");
+    /* 先按原规则算出「原本的圆」，本轮在上一版（full/2）基础上再放大 1.5 倍 → full*0.75。
+       字号与箭头完全不动；圆心仍留在原来的位置，所以圆缩放时不会左右跳。 */
+    const full = Math.max(64, Math.min(100, Math.round(gap - 12)));
+    const size = Math.max(48, Math.round(full * 0.75));
+    col.style.width = size + "px";
+    disc.style.width = disc.style.height = size + "px";
+    col.style.top = Math.max(0, Math.round((h - size) / 2)) + "px";
+    const oldRight = Math.max(0, Math.min(Math.round(gap - 10), full + 40));
+    const center = oldRight - full / 2;          /* 原圆心到视频右缘的距离 */
+    col.style.right = "-" + Math.max(0, Math.round(center + size / 2)) + "px";
+  }
+  window.addEventListener("resize", positionViewDisc);
+
+  /* 「全部资料」面板里点某段录屏：换源后回到静止封面，由用户决定是否播放 */
+  function switchReel(src){
+    const v = document.getElementById("video");
+    if(!v) return;
+    const poster = document.getElementById("poster");
+    const playBtn= document.getElementById("playBtn");
+    const tc     = document.getElementById("timecode");
+    v.pause();
+    activeSrc = src;
+    v.muted = false;
+    v.src = src;
+    v.load();
+    clearNoteTimer(); note("");
+    if(poster) poster.style.display = "grid";
+    if(playBtn) playBtn.textContent = "▶ 播放";
+    if(tc) tc.textContent = "00:00 / 00:00";
+    const seek = document.getElementById("seek");   /* 换录屏：进度条归零，等 loadedmetadata 再启用 */
+    if(seek){ seek.value = "0"; seek.style.setProperty("--played","0%"); seek.disabled = true; }
+    const sc = document.querySelector(".screen");
+    if(sc) sc.scrollIntoView({behavior:"smooth",block:"center"});
+  }
+
+  function bindPlayer(p){
+    video   = document.getElementById("video");
+    const poster  = document.getElementById("poster");
+    const playBtn = document.getElementById("playBtn");
+    const restart = document.getElementById("restartBtn");
+    const speed   = document.getElementById("speed");
+    const speedV  = document.getElementById("speedVal");
+    const tc      = document.getElementById("timecode");
+    const seek    = document.getElementById("seek");
+
+    const fmt = s => {
+      if(!isFinite(s)) return "00:00";
+      const m = Math.floor(s/60), x = Math.floor(s%60);
+      return String(m).padStart(2,"0")+":"+String(x).padStart(2,"0");
+    };
+    activeSrc = p.video;
+
+    /* ---- 可拖拽进度条：timeupdate 推着走，拖拽时不再被 timeupdate 抢回 ---- */
+    let seeking = false;
+    const paintSeek = () => {
+      const d = video.duration;
+      const ok = isFinite(d) && d > 0;
+      seek.disabled = !ok || !activeSrc;
+      const pct = ok ? Math.min(100, Math.max(0, video.currentTime / d * 100)) : 0;
+      if(!seeking) seek.value = String(Math.round(pct * 10));   /* max=1000，1 格 = 0.1% */
+      seek.style.setProperty("--played", pct.toFixed(2) + "%");
+    };
+    seek.onpointerdown = () => { seeking = true; };
+    seek.oninput = () => {
+      const d = video.duration;
+      if(!isFinite(d) || d <= 0) return;
+      const pct = parseFloat(seek.value) / 10;
+      const t = pct / 100 * d;
+      video.currentTime = t;                 /* 拖到哪就跳到哪，播放/暂停状态不变 */
+      tc.textContent = fmt(t) + " / " + fmt(d);
+      seek.style.setProperty("--played", pct.toFixed(2) + "%");
+    };
+    const endSeek = () => { if(seeking){ seeking = false; paintSeek(); } };
+    seek.onchange = endSeek;
+    seek.onpointerup = endSeek;
+    seek.onpointercancel = endSeek;
+    seek.onblur = endSeek;
+    paintSeek();
+
+    const start = () => {
+      if(!activeSrc) return;                 // Demo 待补录：不加载空源、不隐藏封面
+      if(!video.src){ video.src = activeSrc; }
+      poster.style.display = "none";
+      clearNoteTimer(); note("");
+
+      /* 内嵌预览 / 严格自动播放策略会拦有声播放：先静音重试一次 */
+      const attempt = () => {
+        const pr = video.play();
+        if(!pr || !pr.then) return;
+        pr.then(() => {
+          clearNoteTimer(); note("");
+          if(video.muted) note("浏览器拦截了声音，已静音播放 · 点一下画面可开启声音");
+        }).catch(() => {
+          if(!video.muted){ video.muted = true; attempt(); return; }
+          clearNoteTimer();
+          poster.style.display = "grid";
+          note("播放没启动。请点一下画面重试，或改用 Chrome / Edge 打开本页。");
+        });
+      };
+      attempt();
+
+      /* 缓冲慢 / 资源被挡时也给反馈，不再是一片静止 */
+      noteTimer = setTimeout(() => {
+        if(video.readyState < 2 && !video.error)
+          note("视频正在缓冲… 若一直不动，刷新页面，或改用 Chrome / Edge 打开本页。");
+      }, 1500);
+    };
+    const toggle = () => {
+      if(!activeSrc) return;
+      if(video.paused){ start(); } else { video.pause(); }
+    };
+
+    poster.onclick = start;
+    video.onclick = () => {
+      if(video.muted){ video.muted = false; note("声音已开启"); setTimeout(()=>note(""),1800); return; }
+      toggle();
+    };
+    playBtn.onclick = toggle;
+    restart.onclick = () => { if(!activeSrc) return; video.currentTime = 0; start(); };
+    video.onerror = () => {
+      clearNoteTimer();
+      poster.style.display = "grid";
+      note("视频加载失败。刷新页面重试；若仍不行，可能是该视频编码不被当前浏览器支持。");
+    };
+    video.onloadeddata = () => { clearNoteTimer(); if(!video.muted) note(""); };
+    video.onplay  = () => playBtn.textContent = "❚❚ 暂停";
+    video.onpause = () => playBtn.textContent = "▶ 播放";
+    video.onloadedmetadata = () => { tc.textContent = fmt(0)+" / "+fmt(video.duration); paintSeek(); };
+    video.ontimeupdate = () => { tc.textContent = fmt(video.currentTime)+" / "+fmt(video.duration); paintSeek(); };
+    video.onended = () => { playBtn.textContent = "↺ 再看一遍"; poster.style.display = "grid"; paintSeek(); };
+    speed.oninput = () => { video.playbackRate = parseFloat(speed.value); speedV.textContent = parseFloat(speed.value).toFixed(1)+"x"; };
+
+    const cj = document.getElementById("coverJump");
+    if(cj) cj.onclick = () => { if(!activeSrc) return; start(); document.querySelector(".screen").scrollIntoView({behavior:"smooth",block:"center"}); };
+
+  }
+
+  /* 相关文档 / 全部资料：点胶囊在本页展开 iframe 阅读，不跳走 */
+  function bindDocs(){
+    const embed = document.getElementById("docEmbed");
+    const frame = document.getElementById("docFrame");
+    const ttl   = document.getElementById("docEmbedTitle");
+    const open  = document.getElementById("docEmbedOpen");
+    const close = document.getElementById("docEmbedClose");
+    let active = "";
+
+    const hide = () => {
+      embed.hidden = true;
+      frame.src = "about:blank";
+      active = "";
+      document.querySelectorAll(".chip.on[data-doc]").forEach(x=>x.classList.remove("on"));
+    };
+    const show = (f, t) => {
+      if(active === f){ hide(); return; }
+      active = f;
+      ttl.textContent = t;
+      open.href = "doc.html?f=" + encodeURIComponent(f);
+      frame.src = "doc.html?f=" + encodeURIComponent(f) + "&embed=1";
+      embed.hidden = false;
+      document.querySelectorAll(".chip[data-doc]").forEach(x=>x.classList.toggle("on", x.dataset.doc===f));
+    };
+
+    document.querySelectorAll(".chip[data-doc]").forEach(b=>{
+      b.onclick = () => show(b.dataset.doc, b.dataset.title);
+    });
+    close.onclick = hide;
+
+    const toggle = document.getElementById("assetsToggle");
+    const panel  = document.getElementById("assets");
+    toggle.onclick = () => {
+      panel.hidden = !panel.hidden;
+      toggle.classList.toggle("open", !panel.hidden);
+      toggle.textContent = "全部资料 " + ASSET_COUNT + " 项 " + (panel.hidden ? "▾" : "▴");
+    };
+
+    /* 全部资料里的录屏按钮：切到上方播放器并滚过去 */
+    document.querySelectorAll(".assets .chip[data-src]").forEach(b=>{
+      b.onclick = () => switchReel(b.dataset.src);
+    });
+  }
+
+  function select(i){
+    if(video){ video.pause(); video.removeAttribute("src"); video.load(); }
+    clearNoteTimer(); note("");
+    current = i;
+    renderTabs();
+    renderPane();
+    history.replaceState(null,"","?p="+String(i).padStart(2,"0"));
+  }
+
+  renderTabs();
+  renderPane();
+</script>
+</body>
+</html>

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>经历与量化锚点 · 赵梁君 Zia</title>
+<link rel="stylesheet" href="assets/site.css" />
+<style>
+/* ============================================================
+   经历页 · 一屏场景（参考 Artificial Societies / 建筑大图）
+   背景：assets/timeline-city.jpg（用户指定 34.jpg）
+   左：量化锚点的文字描述；右：折线 + 白点，挂经历时间线
+   本轮：整体色调按参考图调亮偏暖黄；加入首页同款 next 跟随圆盘；
+        时间线文字按「主线 4 节点 + 左分叉 2 节点」重新对位
+   ============================================================ */
+body[data-page="timeline"]{background:#B99B74;color:#FBF7EF;}
+.scene{
+  position:relative;width:100%;height:100vh;min-height:620px;
+  overflow:hidden;isolation:isolate;
+}
+/* 参考图：暖金棕、明亮、右侧建筑有阳光。提亮 + 轻微 sepia 偏黄 */
+.scene .bg{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  object-position:center 52%;
+  filter:saturate(.92) contrast(1.12) brightness(1.30);
+  z-index:-2;
+}
+/* 遮罩只在左侧留一层薄暖棕保证白字可读，右侧完全放掉，露出参考图那种金色阳光 */
+.scene .scrim{
+  position:absolute;inset:0;z-index:-1;
+  background:linear-gradient(90deg,rgba(48,36,24,.40) 0%,rgba(48,36,24,.18) 36%,rgba(48,36,24,.02) 68%,transparent 100%),
+             linear-gradient(0deg,rgba(48,36,24,.10),transparent 36%);
+}
+
+/* 右侧折线：只画线，点用 HTML 方块，避免非等比视口把方块拉扁 */
+.wires{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;
+  filter:drop-shadow(0 1px 2px rgba(38,26,14,.55));}
+.wires polyline{fill:none;stroke:rgba(255,255,255,.74);stroke-width:1;}
+
+/* 孤立装饰白点（参考图里几个没文字的方块） */
+.dot{
+  position:absolute;width:7px;height:7px;background:#FBF7EF;
+  box-shadow:0 0 0 1px rgba(38,26,14,.45),0 1px 4px rgba(38,26,14,.4);
+  transform:translate(-50%,-50%);
+}
+
+/* 左侧：大标题已按需求去掉，只留一段量化锚点说明。left 9% 避开 fixed 左侧竖排导航 */
+.sub{
+  position:absolute;left:9%;top:30%;max-width:24%;
+  font-size:13px;line-height:1.85;color:rgba(251,247,239,.96);
+}
+.cta{
+  position:absolute;left:9%;bottom:18.5%;display:inline-flex;align-items:center;gap:8px;
+  padding:10px 20px;border-radius:2px;background:#FBF7EF;color:#2B2620;
+  font-size:12.5px;font-weight:600;letter-spacing:.01em;transition:opacity .2s;
+}
+.cta:hover{opacity:.84;}
+
+/* 右侧节点：文字块右对齐，右缘贴住折线拐点左侧约 2% */
+.tag{position:absolute;text-align:right;width:24%;color:#FBF7EF;}
+.tag b{display:block;font-size:13px;font-weight:600;letter-spacing:.01em;line-height:1.5;}
+.tag span{display:block;font-size:11.5px;line-height:1.65;color:rgba(251,247,239,.92);margin-top:2px;}
+/* 背景调亮后，白字统一加一层极轻阴影，保证小字仍读得清 */
+.lead h1,.sub,.tag{text-shadow:0 1px 3px rgba(30,20,10,.72),0 1px 10px rgba(30,20,10,.34);}
+
+/* 参考图那张白卡：放「现在」这一段。位置 / 样式保持不动 */
+.card{
+  position:absolute;left:50%;top:74.3%;width:20%;min-width:210px;
+  background:#FBF7EF;color:#2B2620;padding:16px 18px 15px;border-radius:2px;
+  box-shadow:0 14px 34px rgba(20,12,6,.24);
+}
+.card .k{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8A7563;}
+.card h3{font-size:13px;font-weight:600;letter-spacing:-.015em;line-height:1.45;margin-top:7px;}
+.card p{font-size:10.5px;line-height:1.65;color:#6B6055;margin-top:6px;}
+
+/* ---------- 首页同款 VIEW 圆盘，整屏跟随；文案改 next ---------- */
+.next-cursor{
+  position:absolute;left:0;top:0;z-index:12;pointer-events:none;
+  transform:translate3d(-300px,-300px,0);
+}
+.next-cursor .disc{
+  /* 圆整体缩到原来的一半；.arrow / .label 的字号一律不动 */
+  width:clamp(35px,3vw,43px);height:clamp(35px,3vw,43px);border-radius:50%;
+  background:#4A382A;color:#F6EFE3;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;
+  box-shadow:0 12px 30px rgba(40,28,18,.30);
+  transition:transform .25s cubic-bezier(.22,1,.36,1);
+}
+.scene.is-following .next-cursor .disc{transform:scale(1.06);}
+/* 箭头与 next 一起收向圆心：原先字号撑满小圆，两个元素被顶到上下边缘，显得散 */
+.next-cursor .arrow{font-size:clamp(20px,2.1vw,27px);line-height:1;font-weight:700;transform:translateY(5px);}
+.next-cursor .label{font-size:clamp(8px,.78vw,10px);letter-spacing:.24em;line-height:1.3;margin-right:-.24em;transform:translateY(-5px);}
+.next-cursor:focus-visible{outline:2px solid #FBF7EF;outline-offset:6px;border-radius:50%;}
+.scene.is-following,.scene.is-following *{cursor:none;}
+
+/* 左侧竖排导航在深底上保持浅卡，沿用全站样式；只把 hover 位移收掉 */
+.nav.side .links a:hover{transform:none;}
+
+@media(max-width:1000px){
+  body[data-page="timeline"]{padding-top:0;}
+  .scene{height:auto;min-height:100vh;padding:90px 26px 46px;display:flex;flex-direction:column;gap:0;}
+  /* 窄屏文字全宽堆叠，需要稍重一点的暖棕遮罩保证白字可读 */
+  .scene .scrim{background:linear-gradient(180deg,rgba(60,44,28,.52),rgba(60,44,28,.42) 62%,rgba(60,44,28,.58));}
+  .wires,.dot{display:none;}
+  .lead,.sub,.tag,.card{position:static;max-width:none;width:100%;text-align:left;}
+  .cta{position:static;max-width:none;align-self:flex-start;}
+  .lead h1{font-size:clamp(28px,6.6vw,40px);}
+  .sub{margin-top:30px;font-size:12.5px;}
+  .tag{margin-top:22px;padding-left:16px;border-left:1px solid rgba(255,255,255,.55);}
+  .tag b{font-size:13.5px;}
+  .card{margin-top:26px;min-width:0;padding:16px;}
+  .cta{margin-top:26px;align-self:flex-start;}
+  /* 静态圆盘：不跟随，排在内容末尾 */
+  .next-cursor{
+    position:static;transform:none!important;pointer-events:auto;
+    align-self:flex-start;margin-top:26px;
+  }
+  .next-cursor .disc{width:39px;height:39px;transform:none;}
+  .scene.is-following .next-cursor .disc{transform:none;}
+  .scene.is-following,.scene.is-following *{cursor:auto;}
+}
+@media(max-width:700px){
+  .scene{padding:82px 20px 40px;}
+}
+@media(prefers-reduced-motion:reduce){
+  .next-cursor .disc{transition:none;}
+}
+</style>
+</head>
+<body data-page="timeline">
+
+<nav class="nav" id="nav"></nav>
+
+<section class="scene" id="scene" aria-label="经历与量化锚点">
+  <img class="bg" src="assets/timeline-city.jpg" alt="暖光下的城市建筑立面" />
+  <div class="scrim"></div>
+
+  <!-- 原本那几条折线：一条自上而下的 Z 字，一条从白卡右上连回主线。
+       本轮右侧星座（文字 / 白点 / 折线）统一左移 7%，白卡右上角的起点保持不动。 -->
+  <svg class="wires" viewBox="0 0 1000 630" preserveAspectRatio="none" aria-hidden="true">
+    <polyline points="769,76 804,183 845,385 895,522" />
+    <polyline points="700,468 758,340 845,385" />
+  </svg>
+
+  <!-- 没有文字的装饰白点：坐标与折线拐点一一对应 -->
+  <span class="dot" style="left:76.9%;top:12.06%"></span>
+  <span class="dot" style="left:80.4%;top:29.05%"></span>
+  <span class="dot" style="left:75.8%;top:53.97%"></span>
+  <span class="dot" style="left:84.5%;top:61.11%"></span>
+  <span class="dot" style="left:70%;top:74.29%"></span>
+  <span class="dot" style="left:89.5%;top:82.86%"></span>
+
+  <div class="sub" data-text>
+    5年测试 + 产品 + 数据经验 · 4 个端到端独立交付作品。将个人主导的「AI 智能测试平台」（FastAPI + LangGraph + RAG）在组内推动落地为测试提效工具，独立设计并执行功能、兼容性、性能测试用例，问题闭环率 95% 以上。统筹多项目并行测试计划，编写与维护测试计划 / 用例 / 报告 100+ 份。基于数据与用户反馈开展产品分析，复现排查客户问题，多次提出产品体验优化建议并被采纳，数据来自真实记录与累计经验非估算。
+  </div>
+
+  <!-- 主线自上而下 4 个节点：文字块整体对位到各自拐点 -->
+  <div class="tag" data-text style="left:50.5%;top:9.8%">
+    <b>2021 · 工程造价</b>
+    <span>西南科技大学本科毕业</span>
+  </div>
+  <div class="tag" data-text style="left:54.5%;top:26.8%">
+    <b>2021 — 2025 · 产品经理 + 测试</b>
+    <span>需求拆解 · 指标设计 · 数据验证</span>
+  </div>
+  <div class="tag" data-text style="left:58.5%;top:58.8%">
+    <b>2025 — 2026 · 测试工程师</b>
+    <span>质量保障 · 自动化用例集</span>
+  </div>
+
+  <!-- 向左分叉第一个节点 -->
+  <div class="tag" data-text style="left:48.5%;top:49.5%">
+    <b>2026 · 了解AI</b>
+  </div>
+
+  <!-- 向左分叉第二个节点：白色 banner，位置和样式不变，只按新文案对齐 -->
+  <div class="card" data-text>
+    <div class="k">Now / 2026 — 至今</div>
+    <h3>AI 产品经理转型中</h3>
+    <p>系统补 RAG、Agent 工作流、Vibe Coding与产品基本能力，整理出四个可讲清取舍的作品，同时重建产品思维能力。</p>
+  </div>
+
+  <!-- 主线向下第四个节点，也就是底部最后一个节点；第二行沿用其他节点的小字样式 -->
+  <div class="tag" data-text style="left:63.5%;top:80.6%">
+    <b>未来</b>
+    <span>深耕AI · 产品项目</span>
+  </div>
+
+  <a class="cta" data-text href="about.html">关于我 ↗</a>
+
+  <!-- 整屏跟随的 next 圆盘：鼠标在整个画面内都跟手，点击进入关于页 -->
+  <a class="next-cursor" id="nextCursor" href="about.html" aria-label="下一页：关于我">
+    <span class="disc"><span class="arrow">→</span><span class="label">next</span></span>
+  </a>
+</section>
+
+<script src="assets/site.js"></script>
+<script>
+  mountNav("timeline");
+
+  (function(){
+    const scene = document.getElementById("scene");
+    const disc  = document.getElementById("nextCursor");
+    const mqStatic = matchMedia("(hover: none), (max-width: 1000px)");
+    const mqReduce = matchMedia("(prefers-reduced-motion: reduce)");
+
+    /* 只在初次载入时给一个可见起点，之后整屏跟随、不再回弹 */
+    function home(){
+      const r = scene.getBoundingClientRect();
+      return { x:r.width * 0.50, y:r.height * 0.23 };
+    }
+    let h = home();
+    let tx = h.x, ty = h.y, cx = h.x, cy = h.y;
+
+    function paint(){
+      disc.style.transform =
+        "translate3d(" + cx.toFixed(1) + "px," + cy.toFixed(1) + "px,0) translate(-50%,-50%)";
+    }
+    paint();
+
+    /* 跟随范围 = 整个画面：不再判断文字区，也不在移出时飞回起点。
+       圆盘始终只朝一个目标走，就不会在文字边缘来回乱飞。 */
+    if(!mqStatic.matches) scene.classList.add("is-following");
+    scene.addEventListener("pointermove", e => {
+      if(mqStatic.matches) return;
+      const r = scene.getBoundingClientRect();
+      tx = e.clientX - r.left; ty = e.clientY - r.top;
+    });
+
+    /* 整屏任意位置点击都进入下一页；页面里的链接交给链接自己处理 */
+    scene.addEventListener("click", e => {
+      if(mqStatic.matches) return;
+      if(e.target.closest && e.target.closest("a")) return;
+      window.location.href = "about.html";
+    });
+
+    function frame(){
+      const k = mqReduce.matches ? 1 : 0.42;   // 整屏跟随时更贴手一点
+      cx += (tx - cx) * k; cy += (ty - cy) * k;
+      paint();
+      requestAnimationFrame(frame);
+    }
+    if(!mqReduce.matches) frame();
+    else scene.addEventListener("pointermove", () => { cx = tx; cy = ty; paint(); });
+  })();
+</script>
+</body>
+</html>

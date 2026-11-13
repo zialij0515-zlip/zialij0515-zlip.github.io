@@ -1,0 +1,151 @@
+/* ============================================================
+   共享基础样式 · Zia 作品集
+   配色按页面切换：body[data-page="home|works|timeline|about"]
+   ============================================================ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  font-family:"Inter","Helvetica Neue",-apple-system,"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+  -webkit-font-smoothing:antialiased;
+  line-height:1.6;
+  min-height:100vh;
+}
+a{text-decoration:none;color:inherit;}
+button{font:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+img{display:block;max-width:100%;}
+::selection{background:var(--accent);color:var(--bg);}
+
+/* ---------- 主题 ---------- */
+body[data-page="home"]{
+  --bg:#F1EFE9; --fg:#26231E; --muted:#7A7367; --line:#DCD6C9;
+  --accent:#8A6A4B; --surface:#E7E2D7; --card:#F7F5EF;
+}
+/* 作品页改用与首页完全一致的米白主题（用户 2026-11-05 指定） */
+body[data-page="works"]{
+  --bg:#F1EFE9; --fg:#26231E; --muted:#7A7367; --line:#DCD6C9;
+  --accent:#8A6A4B; --surface:#E7E2D7; --card:#F7F5EF;
+}
+body[data-page="timeline"]{
+  --bg:#F3EEE4; --fg:#2B2620; --muted:#7C7365; --line:#DDD3C2;
+  --accent:#9A754F; --surface:#EAE1D2; --card:#FBF7EF;
+}
+body[data-page="about"]{
+  --bg:#F2E7CE; --fg:#2C2620; --muted:#7E7059; --line:#DCCBA9;
+  --accent:#A87C4F; --surface:#EADDC0; --card:#FBF4E3;
+}
+body{background:var(--bg);color:var(--fg);}
+
+/* ---------- 顶栏 ---------- */
+.nav{
+  position:relative;z-index:50;display:flex;align-items:center;justify-content:space-between;
+  max-width:1320px;margin:0 auto;padding:24px 40px;
+  font-size:13px;letter-spacing:.02em;
+}
+.nav .brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;letter-spacing:-.01em;}
+.nav .brand .mark{
+  width:26px;height:26px;border-radius:50%;background:var(--fg);color:var(--bg);
+  display:grid;place-items:center;font-size:12px;font-weight:700;
+}
+.nav .links{display:flex;align-items:center;gap:6px;}
+.nav .links a{
+  padding:8px 15px;border-radius:999px;color:var(--muted);
+  border:1px solid transparent;transition:.22s ease;
+}
+.nav .links a:hover{color:var(--fg);border-color:var(--line);}
+.nav .links a.on{color:var(--fg);background:var(--surface);border-color:var(--line);}
+.nav .idx{font-size:11px;color:var(--muted);letter-spacing:.16em;text-transform:uppercase;}
+
+/* ---------- 左侧竖排导航（默认：只有页面按钮，没有名字） ---------- */
+.nav.side{
+  position:fixed;left:18px;top:50%;transform:translateY(-50%);
+  z-index:60;display:block;max-width:none;margin:0;padding:0;
+}
+.nav.side .links{flex-direction:column;gap:8px;}
+.nav.side .links a{
+  width:62px;min-height:48px;display:grid;place-items:center;text-align:center;
+  padding:6px 4px;border-radius:14px;font-size:12px;line-height:1.25;
+  border:1px solid var(--line);background:var(--card);color:var(--muted);
+  box-shadow:0 8px 22px rgba(40,28,14,.10);
+  transition:transform .22s ease,color .22s ease,border-color .22s ease,background .22s ease;
+}
+.nav.side .links a:hover{transform:translateX(4px);color:var(--fg);border-color:var(--accent);}
+.nav.side .links a.on{
+  background:var(--fg);color:var(--bg);border-color:var(--fg);
+  box-shadow:0 10px 26px rgba(40,28,14,.18);
+}
+
+/* ---------- 通用元件 ---------- */
+.eyebrow{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);}
+.sec-head{font-size:clamp(28px,4vw,46px);font-weight:500;letter-spacing:-.035em;line-height:1.15;}
+.muted{color:var(--muted);}
+.pill{
+  display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border-radius:999px;
+  border:1px solid var(--line);background:transparent;font-size:13px;color:var(--fg);
+  transition:.22s ease;
+}
+.pill:hover{background:var(--surface);transform:translateY(-1px);}
+.pill.solid{background:var(--fg);color:var(--bg);border-color:var(--fg);}
+.pill.solid:hover{opacity:.86;}
+
+.page-foot{
+  max-width:1320px;margin:0 auto;padding:34px 40px 40px;
+  display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  border-top:1px solid var(--line);color:var(--muted);font-size:12px;
+}
+.page-foot a{border-bottom:1px solid var(--line);transition:color .2s ease,border-color .2s ease;}
+.page-foot a:hover{color:var(--fg);border-color:var(--accent);}
+
+/* ---------- 入场渐显 ----------
+   用 CSS 动画而非「opacity:0 等 IntersectionObserver 加 .in」：
+   即使观察器没执行（无头浏览器 / 内嵌预览 / JS 被拦截），内容也一定可见，
+   不会出现整页空白。mountReveal 仍保留，但不再是可见性的唯一依赖。 */
+.reveal{opacity:1;transform:none;animation:fadeUp .7s both;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+
+/* ---------- 图位占位 ---------- */
+.ph{
+  position:relative;overflow:hidden;background:var(--ph-bg,linear-gradient(135deg,#D9C7AE,#B3936F));
+  display:flex;flex-direction:column;justify-content:space-between;
+}
+.ph::after{
+  content:"";position:absolute;inset:0;
+  background:radial-gradient(circle at 78% 18%,rgba(255,255,255,.28),transparent 55%),
+             linear-gradient(0deg,rgba(0,0,0,.16),transparent 60%);
+  pointer-events:none;
+}
+.ph .ph-no{
+  position:relative;z-index:1;font-size:11px;letter-spacing:.2em;
+  color:rgba(255,255,255,.9);text-transform:uppercase;
+}
+.ph .ph-label{position:relative;z-index:1;color:#fff;}
+.ph .ph-name{font-size:17px;font-weight:600;letter-spacing:-.02em;line-height:1.3;}
+.ph .ph-sub{font-size:11.5px;opacity:.82;margin-top:4px;}
+.ph .ph-tag{
+  position:absolute;right:12px;top:12px;z-index:1;font-size:10px;letter-spacing:.1em;
+  padding:4px 9px;border:1px solid rgba(255,255,255,.55);border-radius:999px;color:#fff;
+}
+
+/* 窄屏：左侧竖排放不下，降级成顶部横向小条（仍只有按钮，无名字） */
+@media(max-width:1000px){
+  .nav.side{
+    left:0;right:0;top:0;transform:none;display:flex;justify-content:center;
+    padding:9px 12px;background:var(--bg);border-bottom:1px solid var(--line);
+  }
+  .nav.side .links{flex-direction:row;gap:6px;}
+  .nav.side .links a{width:auto;min-height:34px;padding:6px 15px;border-radius:999px;box-shadow:none;}
+  .nav.side .links a:hover{transform:translateY(-2px);}
+  body[data-page="works"],body[data-page="timeline"],body[data-page="about"]{padding-top:55px;}
+}
+@media(max-width:700px){
+  .nav{padding:18px 20px;flex-wrap:wrap;gap:12px;}
+  .nav.side{padding:8px 10px;}
+  .nav .links{gap:2px;flex-wrap:wrap;}
+  .nav .links a{padding:7px 11px;font-size:12px;}
+  .nav .idx{display:none;}
+  .page-foot{padding:26px 20px 32px;}
+}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto;}
+  .reveal{opacity:1;transform:none;transition:none;}
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;}
+}

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>文档 · 赵梁君 Zia</title>
+<link rel="stylesheet" href="assets/site.css" />
+<style>
+  .wrap{max-width:860px;margin:0 auto;padding:0 40px;}
+  .bar{
+    position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:14px;
+    padding:14px 0;background:var(--bg);border-bottom:1px solid var(--line);
+    font-size:12px;color:var(--muted);
+  }
+  .bar a{color:var(--fg);}
+  .bar a:hover{color:var(--accent);}
+  .bar .path{font-family:ui-monospace,Consolas,monospace;font-size:11px;}
+  .doc{padding:44px 0 90px;}
+  .doc h1{font-size:clamp(28px,4vw,42px);font-weight:500;letter-spacing:-.04em;line-height:1.2;margin-bottom:10px;}
+  .doc .meta{font-size:11.5px;color:var(--muted);letter-spacing:.06em;padding-bottom:24px;border-bottom:1px solid var(--line);margin-bottom:28px;}
+  .doc h2{font-size:22px;font-weight:600;letter-spacing:-.025em;margin:34px 0 12px;}
+  .doc h3{font-size:17px;font-weight:600;margin:26px 0 9px;color:var(--accent);}
+  .doc h4{font-size:14px;font-weight:600;margin:20px 0 7px;}
+  .doc p{margin:10px 0;font-size:14px;line-height:1.85;}
+  .doc ul,.doc ol{margin:10px 0 16px 22px;}
+  .doc li{margin:5px 0;font-size:14px;line-height:1.8;}
+  .doc strong{font-weight:600;color:var(--fg);}
+  .doc code{
+    font-family:ui-monospace,Consolas,monospace;font-size:12.5px;
+    background:var(--surface);border:1px solid var(--line);border-radius:5px;padding:2px 6px;
+  }
+  .doc pre{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;overflow-x:auto;margin:16px 0;}
+  .doc pre code{background:none;border:none;padding:0;font-size:12px;line-height:1.7;}
+  .doc blockquote{
+    border-left:3px solid var(--accent);background:var(--card);
+    padding:12px 18px;margin:16px 0;border-radius:0 10px 10px 0;color:var(--muted);font-size:13.5px;
+  }
+  .doc hr{border:none;border-top:1px solid var(--line);margin:30px 0;}
+  .doc table{border-collapse:collapse;width:100%;margin:16px 0;font-size:13px;display:block;overflow-x:auto;}
+  .doc th,.doc td{border:1px solid var(--line);padding:9px 12px;text-align:left;}
+  .doc th{background:var(--surface);font-weight:600;}
+  .doc a{color:var(--accent);text-decoration:underline;text-underline-offset:3px;}
+  .hint{
+    background:var(--card);border:1px solid var(--line);border-left:3px solid var(--accent);
+    border-radius:0 12px 12px 0;padding:18px 20px;font-size:13px;line-height:1.9;color:var(--muted);
+  }
+  .hint b{color:var(--fg);}
+  /* 被作品页 iframe 嵌入时：隐藏自带顶栏，由外层面板统一给标题与操作 */
+  body.embed .bar{display:none;}
+  body.embed .doc{padding-top:26px;}
+  @media(max-width:700px){.wrap{padding:0 20px;}}
+</style>
+</head>
+<body data-page="about">
+
+<div class="wrap">
+  <div class="bar">
+    <a href="works.html">← 返回项目作品</a>
+    <span class="path" id="path">docs / …</span>
+  </div>
+  <div class="doc" id="doc"><div class="hint">正在读取文档…</div></div>
+</div>
+
+<script>
+  const TITLES = {
+    "project-a-prd.md":"A · TikTok 跨境运营课程答疑助手 PRD",
+    "project-a-metrics.md":"A · 指标表与测试用例（20 条）",
+    "project-b-prd.md":"B · 华夏基金养老自助问数助手 PRD",
+    "project-b-design.md":"B · WrenAI 方案设计",
+    "project-b-semantic-layer.md":"B · 语义层 MDL 与指标口径",
+    "project-b-test-questions.md":"B · 指标测试问题清单（20 题）",
+    "project-c-github.md":"C · 项目 GitHub 推送复盘",
+    "project-a-prompt.md":"A · 闲聊 / 兜底节点 Prompt 设计",
+    "project-b-onepager.md":"B · 项目讲解一页纸（面试速览）",
+    "project-a-storyboard.md":"A · A/B Demo 分镜表",
+    "project-a-test-runbook.md":"A · 批量测试操作清单",
+    "project-c-github-guide.md":"C · 项目 GitHub 推送指南",
+    "extra-ecommerce-prd.md":"附 · 电商助手 PRD（早期项目）",
+    "extra-ecommerce-metrics.md":"附 · 电商助手指标表与用例（早期项目）",
+    "extra-docs-home-draft.md":"附 · 在线文档首页内容草稿",
+    "轻减日记PRD需求说明.md":"D · 轻减日记 PRD 需求说明",
+    "需求测试用例.md":"D · 需求 → 测试用例映射与覆盖检查",
+    "指标体系与埋点设计.md":"D · 指标体系与埋点设计",
+    "Case-study.md":"D · 轻减日记项目复盘（一页纸）"
+  };
+  const qs = new URLSearchParams(location.search);
+  const f = qs.get("f") || "";
+  if(qs.get("embed") === "1") document.body.classList.add("embed");
+  const doc = document.getElementById("doc");
+  document.getElementById("path").textContent = "docs / " + (f || "?");
+
+  const esc = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const inline = s => s
+    .replace(/`([^`]+)`/g,"<code>$1</code>")
+    .replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>")
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
+
+  function render(md){
+    const L = md.replace(/\r/g,"").split("\n");
+    let out="", inCode=false, buf=[], list=null;
+    const closeList=()=>{ if(list){out+="</"+list+">";list=null;} };
+    const flush=()=>{ if(buf.length){out+="<pre><code>"+esc(buf.join("\n"))+"</code></pre>";buf=[];} };
+    for(let i=0;i<L.length;i++){
+      const raw=L[i];
+      if(/^```/.test(raw.trim())){ closeList(); if(inCode){flush();inCode=false;}else inCode=true; continue; }
+      if(inCode){buf.push(raw);continue;}
+      const t=raw.trim();
+      if(!t){closeList();continue;}
+      if(/^---+$/.test(t)){closeList();out+="<hr/>";continue;}
+      if(/^\|/.test(t) && i+1<L.length && /^\|[\s:|-]+\|/.test(L[i+1].trim())){
+        closeList();
+        const cells=r=>r.trim().replace(/^\|/,"").replace(/\|$/,"").split("|").map(x=>x.trim());
+        out+="<table><thead><tr>"+cells(raw).map(h=>"<th>"+inline(esc(h))+"</th>").join("")+"</tr></thead><tbody>";
+        i+=2;
+        while(i<L.length && /^\|/.test(L[i].trim())){out+="<tr>"+cells(L[i]).map(c=>"<td>"+inline(esc(c))+"</td>").join("")+"</tr>";i++;}
+        i--;out+="</tbody></table>";continue;
+      }
+      const h=t.match(/^(#{1,4})\s+(.*)$/);
+      if(h){closeList();out+="<h"+h[1].length+">"+inline(esc(h[2]))+"</h"+h[1].length+">";continue;}
+      if(/^>\s?/.test(t)){closeList();out+="<blockquote>"+inline(esc(t.replace(/^>\s?/,"")))+"</blockquote>";continue;}
+      const ul=t.match(/^[-*+]\s+(.*)$/), ol=t.match(/^\d+[.)]\s+(.*)$/);
+      if(ul||ol){const want=ul?"ul":"ol";if(list!==want){closeList();out+="<"+want+">";list=want;}out+="<li>"+inline(esc((ul||ol)[1]))+"</li>";continue;}
+      closeList();out+="<p>"+inline(esc(t))+"</p>";
+    }
+    closeList();flush();return out;
+  }
+
+  function fallback(reason){
+    doc.innerHTML = `<div class="hint"><b>此模式下无法直接渲染文档。</b><br/>
+      双击本地文件（file://）时浏览器会拦截本地读取。<br/><br/>
+      用本地服务预览即可：<code>python -m http.server 8000</code>，再访问 <code>http://localhost:8000</code>。<br/>
+      或直接打开原始文件：<a href="docs/${encodeURIComponent(f)}">docs/${esc(f)}</a>
+      <br/><br/><span style="opacity:.7">${esc(reason)}</span></div>`;
+  }
+
+  if(!Object.prototype.hasOwnProperty.call(TITLES,f)){
+    doc.innerHTML = '<div class="hint"><b>文档不存在或未登记。</b><br/>请从项目作品页里的「相关文档」链接进入。</div>';
+  }else{
+    document.title = TITLES[f] + " · 赵梁君 Zia";
+    fetch("docs/"+encodeURIComponent(f))
+      .then(r=>{if(!r.ok)throw new Error("HTTP "+r.status);return r.text();})
+      .then(md=>{doc.innerHTML='<h1>'+esc(TITLES[f])+'</h1><div class="meta">赵梁君 Zia · 作品集原始交付文档 · 未做内容改写</div>'+render(md);})
+      .catch(e=>fallback(e.message));
+  }
+</script>
+</body>
+</html>
