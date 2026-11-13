@@ -1,6 +1,6 @@
 # 赵梁君
 
-GitHub：github.com/zialij0515-zlip ｜ 作品集网站：【占位，上线后替换链接】
+GitHub：github.com/zialij0515-zlip ｜ 作品集网站：https://zialij0515-zlip.github.io/
 
 **求职意向：AI 产品经理**
 
