@@ -11,10 +11,12 @@ const SITE = {
   email: "13668320997@163.com",
   github: "https://github.com/zialij0515-zlip",
   githubLabel: "github.com/zialij0515-zlip",
-  /* 简历入口：目前是 markdown 版的网页预览，后续拿到 PDF 只需把这一行改成
-     resume: "assets/resume.pdf" 即可，关于页按钮不用动。 */
+  /* 简历双入口：在线看（网页版 resume.html）+ 下载 PDF（assets/resume-zia.pdf）。
+     以后换简历：更新 docs/resume.md 重新生成网页，并替换同名 PDF 文件。 */
   resume: "resume.html",
-  resumeLabel: "查看完整简历 ↗",
+  resumeLabel: "在线看 ↗",
+  resumeDl: "assets/resume-zia.pdf",
+  resumeDlLabel: "下载 PDF ↓",
   /* 导航样式（改一个词全站生效）：
        side = 左侧竖排，只显示四个页面按钮，不显示名字（当前）
        top  = 顶部横条，含名字
@@ -173,11 +175,13 @@ function mountContacts(){
     let v = SITE[k];
     if(k === "github") v = SITE.githubLabel;
     if(k === "resume") v = SITE.resumeLabel;
+    if(k === "resumeDl") v = SITE.resumeDlLabel;
     el.textContent = v;
     if(k === "email" && !PENDING(v)) el.href = "mailto:" + v;
     if(k === "phone" && !PENDING(v)) el.href = "tel:" + v.replace(/\s/g,"");
     if(k === "github") el.href = SITE.github;
     if(k === "resume"){ el.href = SITE.resume; el.target = "_blank"; el.rel = "noopener"; }
+    if(k === "resumeDl"){ el.href = SITE.resumeDl; el.setAttribute("download", "赵梁君简历.pdf"); }
     if(PENDING(v)) el.classList.add("is-pending");
   });
 }

@@ -46,11 +46,12 @@ body[data-page="timeline"]{background:#B99B74;color:#FBF7EF;}
 
 /* 左侧：大标题已按需求去掉，只留一段量化锚点说明。left 9% 避开 fixed 左侧竖排导航 */
 .sub{
-  position:absolute;left:9%;top:30%;max-width:24%;
+  position:absolute;left:9%;top:37%;max-width:24%;
   font-size:13px;line-height:1.85;color:rgba(251,247,239,.96);
 }
 .cta{
-  position:absolute;left:9%;bottom:18.5%;display:inline-flex;align-items:center;gap:8px;
+  /* 紧跟量化文字下方：文字 top:37%、8 行到约 58%，按钮落在 61% 留间距 */
+  position:absolute;left:9%;top:61%;display:inline-flex;align-items:center;gap:8px;
   padding:10px 20px;border-radius:2px;background:#FBF7EF;color:#2B2620;
   font-size:12.5px;font-weight:600;letter-spacing:.01em;transition:opacity .2s;
 }
@@ -60,6 +61,10 @@ body[data-page="timeline"]{background:#B99B74;color:#FBF7EF;}
 .tag{position:absolute;text-align:right;width:24%;color:#FBF7EF;}
 .tag b{display:block;font-size:13px;font-weight:600;letter-spacing:.01em;line-height:1.5;}
 .tag span{display:block;font-size:11.5px;line-height:1.65;color:rgba(251,247,239,.92);margin-top:2px;}
+/* 节点右侧的文字：贴在拐点右侧，宽度收到屏幕边缘，字号略小防换行溢出 */
+.tag.node-right{text-align:left;width:14.5%;}
+.tag.node-right b{font-size:12px;}
+.tag.node-right span{font-size:10.5px;}
 /* 背景调亮后，白字统一加一层极轻阴影，保证小字仍读得清 */
 .lead h1,.sub,.tag{text-shadow:0 1px 3px rgba(30,20,10,.72),0 1px 10px rgba(30,20,10,.34);}
 
@@ -163,13 +168,14 @@ body[data-page="timeline"]{background:#B99B74;color:#FBF7EF;}
     <b>2021 — 2025 · 产品经理 + 测试</b>
     <span>需求拆解 · 指标设计 · 数据验证</span>
   </div>
-  <div class="tag" data-text style="left:58.5%;top:58.8%">
+  <!-- 2025—2026 测试工程师：从折线左侧移到该拐点右侧，文字改为左对齐 -->
+  <div class="tag node-right" data-text style="left:85.3%;top:59.3%">
     <b>2025 — 2026 · 测试工程师</b>
     <span>质量保障 · 自动化用例集</span>
   </div>
 
-  <!-- 向左分叉第一个节点 -->
-  <div class="tag" data-text style="left:48.5%;top:49.5%">
+  <!-- 向左分叉第一个节点：2026·了解AI 上移到拐点正上方 -->
+  <div class="tag" data-text style="left:72.4%;top:48%;text-align:left;white-space:nowrap">
     <b>2026 · 了解AI</b>
   </div>
 
